@@ -1,95 +1,43 @@
-import Image from "next/image";
-import styles from "./page.module.css";
-
-export default function Home() {
+"use client";
+import JSXStyle from "styled-jsx/style";
+import React from "react";
+import { useState } from "react";
+import "./page.css";
+import { invoke } from "@tauri-apps/api/tauri";
+import { useRouter } from "next/navigation";
+export const Starting: React.FC = () => {
+  const [url, setUrl] = useState("");
+  const router = useRouter();
+  const [submitDisabled, setSubmitDisabled] = useState(false);
+  async function scrapeGoogleSheet() {
+    if (url.indexOf("https://docs.google.com/spreadsheets/") != -1) {
+      console.log("url attempted to grab:" + url);
+      setSubmitDisabled(true);
+      invoke<string>("grab_url", { url: url })
+        .then(() => {
+          console.log("finished grab");
+          setSubmitDisabled(false);
+        })
+        .catch(console.error);
+    } else {
+      console.log("bad url");
+    }
+  }
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <div className="contents">
+      <h1>Setup</h1>
+      <hr></hr>
+      <h2>Imports</h2>
+      <h3>Enter the google sheet</h3>
+      <input type="text" id="url" onChange={(e) => setUrl(e.target.value)} />
+      <button disabled={submitDisabled} onClick={() => scrapeGoogleSheet()}>
+        Retrieve data
+      </button>
+      <h2>Manual input</h2>
+      <button disabled={submitDisabled} onClick={() => router.push("/editor")}>
+        Manual Enter
+      </button>
+    </div>
   );
-}
+};
+export default Starting;

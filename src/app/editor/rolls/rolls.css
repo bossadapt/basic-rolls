@@ -1,0 +1,45 @@
+.rollInput {
+  width: fill;
+  font-size: medium;
+}
+.addButton {
+  font-size: 150%;
+  width: 8%;
+  margin-left: 3%;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  margin-right: 5%;
+}
+
+.finishButton {
+  font-size: large;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  margin-right: 15%;
+}
+.svgButton {
+  background-color: #696969;
+  border: 0px;
+  width: 50px;
+  padding: 10px;
+}
+.svgEditImg {
+  width: 70%;
+  height: 100%;
+}
+.svgDeleteImg {
+  width: 100%;
+  height: 100%;
+}
+.listText {
+  margin-left: 5%;
+  margin-right: 5%;
+  min-height: 100%;
+  text-align: center;
+  display: inline-block;
+  vertical-align: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

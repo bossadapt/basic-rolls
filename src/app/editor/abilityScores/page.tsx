@@ -71,63 +71,68 @@ export const EditAbilityScore: React.FC = () => {
         //move back to the basic menu to see if they are ready
         setSubmitDisabled(false);
         console.log("reached end of editability and now moving");
-        router.back;
+        router.push("/editor");
       })
       .catch(console.error);
   }
   return (
     <div>
-      <h2>Ability Score Editor</h2>
-      <hr></hr>
-      <div>
-        <h3>Strength</h3>
+      <h1 style={{ marginTop: "5%", marginBottom: "5%" }}>
+        Ability Score Editor
+      </h1>
+      <hr style={{ marginBottom: "5%" }}></hr>
+      <div className="horiz">
+        <h3 className="scoreText">Strength</h3>
         <input
           type="number"
           value={strength}
           onChange={(e) => setStrength(parseInt(e.target.value) || 0)}
         />
-      </div>
-      <div>
-        <h3>Dexterity</h3>
+        <h3 className="scoreText">Dexterity</h3>
         <input
           type="number"
           value={dexterity}
           onChange={(e) => setDexterity(parseInt(e.target.value) || 0)}
         />
       </div>
-      <div>
-        <h3>Constitution</h3>
+      <div className="horiz">
+        <h3 className="scoreText">Constitution</h3>
         <input
           type="number"
           value={constitution}
           onChange={(e) => setConstitution(parseInt(e.target.value) || 0)}
         />
-      </div>
-      <div>
-        <h3>Intelligence</h3>
+        <h3 className="scoreText">Intelligence</h3>
         <input
           type="number"
           value={intelligence}
           onChange={(e) => setIntelligence(parseInt(e.target.value) || 0)}
         />
       </div>
-      <div>
-        <h3>Wisdom</h3>
+      <div className="horiz">
+        <h3 className="scoreText">Wisdom</h3>
         <input
           type="number"
           value={wisdom}
           onChange={(e) => setWisdom(parseInt(e.target.value) || 0)}
         />
-      </div>
-      <div>
-        <h3>Charism</h3>
+        <h3 className="scoreText">Charism</h3>
         <input
           type="number"
           value={charism}
           onChange={(e) => setCharism(parseInt(e.target.value) || 0)}
         />
       </div>
-      <button disabled={submitDisabled} onClick={() => finalizeScores()}>
+      <button
+        style={{
+          width: "50%",
+          marginLeft: "25%",
+          fontWeight: "bold",
+        }}
+        className="buttonCenter"
+        disabled={submitDisabled}
+        onClick={() => finalizeScores()}
+      >
         Finish
       </button>
     </div>

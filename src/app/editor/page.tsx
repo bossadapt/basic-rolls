@@ -22,7 +22,7 @@ export const Editor: React.FC = () => {
           router.push("/editor/rolls");
         } else {
           console.log("Ran3");
-          //route to roller page
+          router.push("../home");
         }
         console.log("finished grab");
       })

@@ -14,3 +14,9 @@
   --card-rgb: 180, 185, 188;
   --card-border-rgb: 131, 134, 135;
 }
+html,
+body {
+  background-color: var(--main-background-color);
+  min-height: 100vh;
+  margin: 0;
+}

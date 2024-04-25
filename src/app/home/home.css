@@ -1,0 +1,30 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.abilityScoreText {
+  width: 33%;
+}
+.horiz {
+  display: flex;
+  flex-direction: row;
+}
+.horiz > div {
+  flex: 1;
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+.horiz > div:first-child {
+  border-left: 0;
+}
+
+.horiz > div:last-child {
+  border-right: 0;
+}
+
+.dice-builder {
+  flex: 1;
+}

@@ -4,6 +4,7 @@ import React from "react";
 import { useState } from "react";
 import "./page.css";
 import { useRouter } from "next/navigation";
+
 export const Starting: React.FC = () => {
   const router = useRouter();
   return (

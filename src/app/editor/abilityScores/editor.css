@@ -1,3 +1,15 @@
 input {
   width: 35px;
 }
+.scoreText {
+  width: 20%;
+  margin-left: 2.5%;
+  margin-right: 2.5%;
+  border-right: 0px;
+  border-left: 0px;
+}
+.buttonCenter {
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+}

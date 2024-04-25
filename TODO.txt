@@ -1,0 +1,4 @@
+Math for the roller to actually work
+Add default rolls(Saves, Skills)
+Add Conditions(Awaken, Ability Enhancers)
+Add turn order(Action(Attack, Spell), Bonus Action, Reaction, Nothing)

@@ -6,34 +6,6 @@ export const Character: React.FC<CharacterProps> = ({ abilityScores }) => {
   return (
     <div>
       <div className="horiz">
-        <h3 className="abilityScoreText">
-          {abilityScores[0]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(0)!.score}</h3>
-        <h3 className="abilityScoreText">
-          {abilityScores[1]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(1)!.score}</h3>
-        <h3 className="abilityScoreText">
-          {abilityScores[2]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(2)!.score}</h3>
-      </div>
-      <div className="horiz">
-        <h3 className="abilityScoreText">
-          {abilityScores[3]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(3)!.score}</h3>
-        <h3 className="abilityScoreText">
-          {abilityScores[4]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(4)!.score}</h3>
-        <h3 className="abilityScoreText">
-          {abilityScores[5]!.ability.substring(0, 3)}:
-        </h3>
-        <h3 className="abilityScoreText">{abilityScores.at(5)!.score}</h3>
-      </div>
-      <div className="horiz">
         <h3
           style={{
             width: "25%",

@@ -8,6 +8,10 @@ input {
   border-right: 0px;
   border-left: 0px;
 }
+.horiz {
+  display: flex;
+  flex-direction: row;
+}
 .buttonCenter {
   text-align: center;
   display: table-cell;

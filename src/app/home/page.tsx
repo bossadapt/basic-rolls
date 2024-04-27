@@ -1,7 +1,7 @@
 "use client";
 import "./home.css";
 import { Character } from "./Character";
-import { Items } from "./Items";
+import { Conditions } from "./Conditions";
 import { Currency } from "./Currency";
 import { DiceBuilder } from "./DiceBuilder";
 import { useEffect, useState } from "react";
@@ -28,8 +28,6 @@ export const Home: React.FC = () => {
       ]
     >("get_lists", {})
       .then((returnTuple) => {
-        console.log("tuple1", returnTuple[0]);
-        console.log("tuple2", returnTuple[1]);
         setRolls(returnTuple[0]);
         setAbilityScores(returnTuple[1]);
       })
@@ -43,15 +41,15 @@ export const Home: React.FC = () => {
           <Character abilityScores={abilityScores} />
         </div>
         <div>
-          <h2>Items</h2>
-          <Items />
+          <h2>Conditions</h2>
+          <Conditions />
         </div>
         <div>
           <h2>Currency</h2>
           <Currency />
         </div>
       </div>
-      <DiceBuilder rolls={rolls} />
+      <DiceBuilder rolls={rolls} abilityScores={abilityScores} />
     </div>
   );
 };

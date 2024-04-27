@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 interface EditAbilityScoreProps {
   rolls: { roll_name: string; default_roll: string }[];
 }
-const legitSymbols: String[] = ["+", "-", "*", "/", "^"];
+const legitSymbols: String[] = ["+", "-", "*", "/"];
 const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
 export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
   const router = useRouter();
@@ -166,7 +166,7 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
     rollString = rollString.replaceAll(" ", "");
     //legal characters:
     //2d20 || d6
-    // + || * || / || ^
+    // + || * || /
     //3
     //var(something)
     let paranthesis: string[] = ["(", ")"];
@@ -184,13 +184,13 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
     ];
     let legitCharacters: String[] = ["d", "v"];
     //steps to converting:
-    //initial                      d20+(3d20 * var(Dex)) ^ 3 +var(dex)/ 5
-    //removing spaces and caps:    d20+(3d20*var(dex))^3+3/5
-    //change vars to numbers:      d20+(3d20*12)^3+3/5
-    //changing dice to numbers:    12+(30*12)^3+3/5
-    //change parenthesis to num:   12+360^3+3/5
-    //continue to follow pemdas:   12+46,656,000+3/5
-    //done:                        46,656,012.6
+    //initial                      d20+(3d20 * var(Dex)) -  3 +var(dex)/ 5
+    //removing spaces and caps:    d20+(3d20*var(dex))-3+3/5
+    //change vars to numbers:      d20+(3d20*12)-3+3/5
+    //changing dice to numbers:    12+(30*12)-3+3/5
+    //change parenthesis to num:   12+360-3+3/5
+    //continue to follow pemdas:   369/5
+    //done:                        73.8
 
     // crtical errors(that return false):
     //x empty ("") but is taken care of prior

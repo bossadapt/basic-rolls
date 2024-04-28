@@ -13,8 +13,9 @@ export const RollEditCard: React.FC<RollEditCardProps> = ({
 }) => {
   return (
     <div
-      className="horiz"
       style={{
+        display: "flex",
+        flexDirection: "row",
         borderRadius: "10px",
         backgroundColor: "#696969",
         borderLeft: "456px",

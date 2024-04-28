@@ -1,9 +1,22 @@
+.root {
+  height: 100vh;
+  width: 100vw;
+  max-height: 100vh;
+  max-width: 100vw;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.rollList {
+  height: 60vh;
+  max-height: 60vh;
+  overflow-y: auto;
+}
 .rollInput {
   width: fill;
   font-size: medium;
 }
 .addButton {
-  font-size: 150%;
+  font-size: 200%;
   width: 8%;
   margin-left: 3%;
   text-align: center;

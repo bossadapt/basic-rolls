@@ -9,19 +9,23 @@ export const Editor: React.FC = () => {
     invoke<
       [
         { rollName: string; defaultRoll: string; rollType: string }[],
-        { ability: string; score: number }[]
+        { ability: string; score: number }[],
+        { infoType: string; input: string }[]
       ]
     >("get_lists", {})
       .then((result) => {
-        const [rolls, abilityScores] = result;
-        if (abilityScores.length != 6) {
-          console.log("Ran1");
+        const [rolls, abilityScores, characterInfoList] = result;
+        if (characterInfoList.length == 0) {
+          console.log("character info not there redirecting");
+          router.push("/editor/characterInfo");
+        } else if (abilityScores.length != 6) {
+          console.log("ability scores not there redirecting");
           router.push("/editor/abilityScores");
         } else if (rolls.length == 0) {
-          console.log("Ran2");
+          console.log("rolls not there redirecting");
           router.push("/editor/rolls");
         } else {
-          console.log("Ran3");
+          console.log("prerequisites fufilled entering main screen");
           router.push("../home");
         }
         console.log("finished grab");

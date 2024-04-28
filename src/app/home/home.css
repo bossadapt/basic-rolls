@@ -7,6 +7,10 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+.categoryTitle {
+  margin-bottom: 0;
+  font-size: 23px;
+}
 .abilityScoreText {
   width: 33%;
 }
@@ -53,7 +57,15 @@
   border-left: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
-
+.Toastify__toast--warning {
+  font-size: 13px;
+  max-height: 16px;
+  margin: 0;
+}
+.Toastify__toast--warning > div {
+  margin: 0;
+  padding: 0;
+}
 .horiz > div:first-child {
   border-left: 0;
 }

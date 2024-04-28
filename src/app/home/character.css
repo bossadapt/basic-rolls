@@ -1,0 +1,51 @@
+.changeButtonPlus {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-right: 0;
+  display: flex;
+  width: 13px;
+  height: 13px;
+  padding-right: 0px;
+  padding-left: 0.9px;
+  line-height: 8px;
+  background-color: green;
+}
+
+.changeButtonSub {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-right: 0;
+  display: flex;
+  width: 13px;
+  height: 13px;
+  padding-right: 0px;
+  padding-left: 2px;
+  line-height: 6px;
+  background-color: red;
+}
+.sectionTitle {
+  margin-bottom: 3px;
+}
+.inputDescription {
+  color: white;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.inputCharacterField {
+  width: 16%;
+  height: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* this just gets rid of the ^ and down arrows from input boxxes*/
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

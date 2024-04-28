@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { checkRoll } from "../helperFunctions";
+import "react-toastify/dist/ReactToastify.css";
 interface HistoryRoll {
   id: number;
   roll: string;
@@ -23,7 +26,6 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
     "6",
     "7",
     "8",
-
     "9",
   ];
   let assistDiceOptions = [
@@ -39,9 +41,12 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
   let assistSymbolOptions = [" - ", " + ", "*", " / "];
   const [historyRolls, setHistoryRolls] = useState<HistoryRoll[]>([]);
   const [search, setSearch] = useState("");
-  const [toolTip, setTooltip] = useState("");
   const [currentRoll, setCurrentRoll] = useState("");
-
+  function sendErrorMessage(message: string) {
+    toast.warning(message, {
+      position: "bottom-right",
+    });
+  }
   function convertToAdvantageType(roll: string, advantageType: string): string {
     let addedCharacterCount = 0;
     for (let i = 0; i < roll.length + addedCharacterCount; i++) {
@@ -117,12 +122,10 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
   }
 
   function getRollByName(varName: string): string {
-    console.log('varName: "' + varName + '"');
     let rollAttempt = rolls.find(
       (currentRoll) =>
         currentRoll.roll_name.toLocaleLowerCase() == varName.toLocaleLowerCase()
     );
-    console.log("Roll Attempt:" + rollAttempt);
     if (rollAttempt) {
       return rollAttempt.default_roll;
     }
@@ -131,34 +134,27 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
         ability.ability.toLocaleLowerCase().substring(0, 3) ==
         varName.toLocaleLowerCase()
     );
-    console.log("Ability Attempt:" + abilityAttempt);
     if (abilityAttempt) {
-      return ((abilityAttempt.score - 10) / 2).toString();
+      return convertAbilityScoreToModif(abilityAttempt.score).toString();
     }
-    console.log("could not find the var");
     return "";
   }
   function exposeVars(roll: string): string {
-    console.log("exposed vars called again with: " + roll);
     if (!roll.includes("var(")) {
-      console.log("ran out of vars returning now:" + roll);
       return roll;
     } else {
-      console.log("else of expose ran");
       let varCollection: {
         varRoll: string;
         indexStart: number;
         indexEnd: number;
       }[] = [];
       for (let i = 0; i < roll.length; i++) {
-        console.log("loop 1 running");
         if (roll.charAt(i) == "v") {
           let indexFound = i;
           let varName = "";
           //skipping the rest of the declaration "ar("
           i += 4;
           while (roll.charAt(i) !== ")") {
-            console.log("while 1 running");
             varName += roll.charAt(i);
             i++;
           }
@@ -170,8 +166,6 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
         }
       }
       for (let i2 = varCollection.length - 1; i2 > -1; i2--) {
-        console.log(varCollection[i2]);
-        console.log("loop 2 running");
         roll =
           roll.substring(0, varCollection[i2].indexStart) +
           varCollection[i2].varRoll +
@@ -183,33 +177,26 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
   function finishRoll(rollType: string) {
     //verify the roll(rollable)
     let roll = currentRoll;
-    console.log(
-      'reached finishRoll with currentRoll: "' +
-        roll +
-        '", rollType:' +
-        rollType
-    );
     roll = roll.toLocaleLowerCase();
     roll = roll.replaceAll(" ", "");
-    if (rollCheck(roll)) {
-      console.log("finished checking rolls");
+    if (roll === "") {
+      sendErrorMessage("Failed Add: empty roll");
+      return;
+    }
+    let checkRollResult = checkRoll(roll, rolls);
+    if (checkRollResult.result) {
       //exchange all vars for real rolls(also the vars in those vars)
       roll = exposeVars(roll);
       //change roll according to type
-      console.log(rollType === "normal");
       if (rollType === "normal") {
-        console.log("type equal to normal");
       } else if (rollType === "disadvantage") {
-        console.log("type equal to disadv");
         roll = convertToAdvantageType(roll, "kl");
       } else if (rollType === "advantage") {
-        console.log("type equal to adv");
         roll = convertToAdvantageType(roll, "kh");
       } else if (rollType === "crit") {
-        console.log("type equal to crit");
         roll = convertToCrit(roll);
       } else {
-        setTooltip("Invalid roll type");
+        sendErrorMessage("Invalid roll type");
         return;
       }
       setHistoryRolls((previousHistory) => {
@@ -221,194 +208,33 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
         let newRoll = { id: id, roll, type: rollType };
         if (
           previousHistory.length === 0 ||
-          (previousHistory[previousHistory.length - 1].roll !== newRoll.roll &&
-            previousHistory[previousHistory.length - 1].type !== newRoll.type)
+          previousHistory[previousHistory.length - 1].roll !== newRoll.roll ||
+          previousHistory[previousHistory.length - 1].type !== newRoll.type
         ) {
+          console.log("Passed: " + newRoll);
           previousHistory.push(newRoll);
+        } else {
+          console.log("FAILED: " + newRoll);
         }
-        console.log("Push setHistory, reached:" + newRoll);
-        return previousHistory;
+        console.log("Push setHistory, reached:" + previousHistory);
+        //have to do this or it does not recognize a push as a change
+        return previousHistory.slice();
       });
       //copy to clipboard and add to history
       navigator.clipboard.writeText("/r " + roll);
       console.log("finished FinishRolls with: " + roll);
     } else {
-      console.log("FAILED A ROLL CHECK with " + roll);
-      console.log("tooltip: " + toolTip);
+      sendErrorMessage(checkRollResult.desc);
     }
   }
-  function getVarList(roll: String): String[] {
-    let varList = [];
-    //first find var(
-    //then find )
-    //inbetween is the var name
-    for (let i = 3; i < roll.length; i++) {
-      if (roll.charAt(i) == "(" && roll.substring(i - 3, i) == "var") {
-        let variable = [];
-        i += 1;
-        while (roll.charAt(i) != ")") {
-          variable.push(roll.charAt(i));
-          i += 1;
-        }
-        varList.push(variable.join(""));
-      }
-    }
-    return varList;
+
+  function convertAbilityScoreToModif(abilityScore: number): number {
+    return Math.floor((abilityScore - 10) / 2);
   }
-  function checkVars(varList: String[]) {
-    for (let item of varList) {
-      if (
-        rolls.some(
-          (roll) =>
-            roll.roll_name.toLocaleLowerCase() === item.toLocaleLowerCase()
-        ) ||
-        abilityScores.some(
-          (ability) =>
-            ability.ability.substring(0, 3).toLocaleLowerCase() ===
-            item.toLocaleLowerCase()
-        )
-      ) {
-        //pass because it does exist
-      } else {
-        console.log('var "' + item + '" does not exist');
-        setTooltip('var "' + item + '" does not exist');
-        return false;
-      }
-    }
-    return true;
-  }
-  function rollCheck(rollString: String): boolean {
-    rollString = rollString.toLowerCase();
-    rollString = rollString.replaceAll(" ", "");
-    //legal characters:
-    //2d20 || d6
-    // + || * || /
-    //3
-    //var(something)
-    const legitSymbols: String[] = ["+", "-", "*", "/", "^"];
-    let legitCharacters: String[] = ["d", "v"];
-    //steps to converting:
-    //initial                      d20+(3d20 * var(Dex)) -  3 +var(dex)/ 5
-    //removing spaces and caps:    d20+(3d20*var(dex))-3+3/5
-    //change vars to numbers:      d20+(3d20*12)-3+3/5
-    //changing dice to numbers:    12+(30*12)-3+3/5
-    //change parenthesis to num:   12+360-3+3/5
-    //continue to follow pemdas:   369/5
-    //done:                        73.8
 
-    // crtical errors(that return false):
-    //x empty ("") but is taken care of prior
-    //x parenthesis do not close ((())
-    //x var does not exist (var(fake))
-    //x illegal characters ([#)@$])
-    //x starts or ends with symbol  (* 12 *)
-    //x dice has number on the right of it ("10 + 1d + 3 + d")
-    //(did not do, will catch when rolling) math not possible(for at least the static numbers)
-
-    //full check in one loop(more confusing but less loops)
-    //check for illegal characters and check that dice have digits with them
-
-    //todo get rid of legit digits and do an ascii check
-    let leftParCounter = 0;
-    let rightParCounter = 0;
-    for (let i = 0; i < rollString.length; i++) {
-      let char = rollString.charAt(i);
-      if (legitDigits.some((dig) => dig == char)) {
-        //pass
-      } else if (char == "(") {
-        leftParCounter += 1;
-        if (rollString.length !== i + 1 && rollString.charAt(i + 1) === ")") {
-          setTooltip("Failed add: empty parenthesis");
-          console.log("reached failed 1");
-          return false;
-        }
-      } else if (char == ")") {
-        rightParCounter += 1;
-        if (rightParCounter > leftParCounter) {
-          setTooltip(
-            'Failed add: Parenthesis do not close: ")" came before "("'
-          );
-          console.log("reached failed 2");
-          return false;
-        }
-      } else if (legitSymbols.includes(char)) {
-        //symbol checks
-        if (i == 0 || i == rollString.length - 1) {
-          setTooltip("Failed add: symbol used at the start or end");
-          console.log("reached failed 3");
-          return false;
-        } else if (legitSymbols.includes(rollString.charAt(i - 1))) {
-          setTooltip(
-            'Failed add: two symbols next to eachother "' +
-              char +
-              rollString.charAt(i - 1) +
-              '"'
-          );
-          console.log("reached failed 4");
-          return false;
-        } else if (rollString.charAt(i - 1) == "(") {
-          setTooltip('Failed add: symbol facing parenthesis "(' + char + '"');
-          console.log("reached failed 5");
-          return false;
-        } else if (rollString.charAt(i + 1) == ")") {
-          setTooltip('Failed add: symbol facing parenthesis "' + char + ')"');
-          console.log("reached failed 6");
-          return false;
-        }
-      } else if (char == "d") {
-        //ensure that dice are fully established
-        if (
-          i + 1 === rollString.length ||
-          !legitDigits.some((e) => e == rollString.charAt(i + 1))
-        ) {
-          setTooltip("Dice established but does not have digit following it");
-          console.log("reached failed 7");
-          return false;
-        }
-      } else if (char == "v") {
-        //ran into a variable(skip it if it fills the var rules)
-        if (
-          i + 4 >= rollString.length ||
-          rollString.substring(i, i + 4) !== "var("
-        ) {
-          setTooltip('Invalid character of "' + char + '"');
-        } else {
-          i += 4;
-          while (char != ")") {
-            i += 1;
-            char = rollString.charAt(i);
-            if (i >= rollString.length) {
-              setTooltip('Failed add: Parenthesis do not close: "var("');
-              console.log("reached failed 8");
-              return false;
-            }
-          }
-        }
-      } else {
-        setTooltip('Invalid character of "' + char + '"');
-        console.log("reached failed 9");
-        return false;
-      }
-    }
-
-    if (leftParCounter != rightParCounter) {
-      setTooltip('Failed add: Parenthesis do not close: ")" missing');
-      console.log("reached failed 10");
-      return false;
-    }
-
-    //check if vars exist(see if it exists in rolls or is an inbuilt ability score)
-    let varList = getVarList(rollString);
-    if (checkVars(varList)) {
-      return true;
-    } else {
-      console.log("reached failed 11");
-      return false;
-    }
-  }
   return (
     <div className="dice-builder">
-      <h2 style={{ marginBottom: "0px" }}>Dice Builder</h2>
+      <h2 className="categoryTitle">Dice Builder</h2>
       <input
         placeholder="search all vars"
         style={{ width: "25%", marginLeft: "1.6666%", marginRight: "auto" }}
@@ -435,7 +261,10 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
               {abilityScores
                 .filter((item) => {
                   let stringScore =
-                    (item.score - 10) / 2 + "(" + item.score + ")";
+                    convertAbilityScoreToModif(item.score) +
+                    "(" +
+                    item.score +
+                    ")";
                   return (
                     item.ability
                       .toLocaleLowerCase()
@@ -463,7 +292,10 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                     >
                       <th>{ability.ability}</th>
                       <td>
-                        {(ability.score - 10) / 2 + "(" + ability.score + ") "}
+                        {convertAbilityScoreToModif(ability.score) +
+                          "(" +
+                          ability.score +
+                          ") "}
                       </td>
                     </tr>
                   );
@@ -530,6 +362,7 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                       .includes(search.toLocaleLowerCase())
                   );
                 })
+                .sort((a, b) => b.id - a.id)
                 .map((historyRoll) => {
                   return (
                     <tr
@@ -591,12 +424,12 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
           value={currentRoll}
           onChange={(evt) => setCurrentRoll(evt.target.value)}
         ></input>
-
         <button onClick={() => finishRoll("disadvantage")}>Disadvantage</button>
         <button onClick={() => finishRoll("normal")}>Normal</button>
         <button onClick={() => finishRoll("advantage")}>Advantage</button>
         <button onClick={() => finishRoll("crit")}>CRIT</button>
       </div>
+      <ToastContainer />
     </div>
   );
 };

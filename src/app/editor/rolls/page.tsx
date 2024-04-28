@@ -1,6 +1,7 @@
 "use client";
 import { SyntheticEvent, useState } from "react";
 import "./rolls.css";
+import { checkRoll, getVarList } from "../../helperFunctions";
 import { RollEditCard } from "./RollEditCard";
 import { invoke } from "@tauri-apps/api";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,109 @@ const legitSymbols: String[] = ["+", "-", "*", "/"];
 const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
 export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
   const router = useRouter();
-  const [currentRolls, setCurrentRolls] = useState(rolls || []);
+  let defaultRolls: { roll_name: string; default_roll: string }[] = [
+    {
+      roll_name: "Initiative",
+      default_roll: "d20 + var(dex)",
+    },
+    {
+      roll_name: "Acrobatics",
+      default_roll: "d20 + var(dex)",
+    },
+    {
+      roll_name: "Animal_Handling",
+      default_roll: "d20 +var(wis)",
+    },
+    {
+      roll_name: "Arcana",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Athletics",
+      default_roll: "d20 + var(str)",
+    },
+    {
+      roll_name: "Deception",
+      default_roll: "d20 + var(cha)",
+    },
+    {
+      roll_name: "History",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Insight",
+      default_roll: "d20 + var(wis)",
+    },
+    {
+      roll_name: "Intimidation",
+      default_roll: "d20 + var(cha)",
+    },
+    {
+      roll_name: "Investigation",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Medicine",
+      default_roll: "d20 + var(wis)",
+    },
+    {
+      roll_name: "Nature",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Perception",
+      default_roll: "d20 + var(wis)",
+    },
+    {
+      roll_name: "Performance",
+      default_roll: "d20 + var(cha)",
+    },
+    {
+      roll_name: "Persuasion",
+      default_roll: "d20 + var(cha)",
+    },
+    {
+      roll_name: "Religion",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Slight_of_Hand",
+      default_roll: "d20 + var(dex)",
+    },
+    {
+      roll_name: "Stealth",
+      default_roll: "d20 + var(dex)",
+    },
+    {
+      roll_name: "Survival",
+      default_roll: "d20 + var(wis)",
+    },
+    {
+      roll_name: "Strength_Save",
+      default_roll: "d20 + var(str)",
+    },
+    {
+      roll_name: "Dexterity_Save",
+      default_roll: "d20 + var(dex)",
+    },
+    {
+      roll_name: "Constitution_Save",
+      default_roll: "d20 + var(con)",
+    },
+    {
+      roll_name: "Intelligence_Save",
+      default_roll: "d20 + var(int)",
+    },
+    {
+      roll_name: "Wisdom_Save",
+      default_roll: "d20 + var(wis)",
+    },
+    {
+      roll_name: "Charisma_Save",
+      default_roll: "d20 + var(cha)",
+    },
+  ];
+  const [currentRolls, setCurrentRolls] = useState(rolls || defaultRolls);
   const [rollNameInput, setRollNameInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [rollDefaultInput, setRollDefaultInput] = useState("");
@@ -114,7 +217,8 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
         }
         if (temp !== "" && tempRoll !== "") {
           if (!temp.includes(" ")) {
-            if (rollCheck(target.roll.value)) {
+            let checkRollResult = checkRoll(target.roll.value, currentRolls);
+            if (checkRollResult.result) {
               setCurrentRolls((prev) => {
                 if (
                   !prev.some(
@@ -146,7 +250,7 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
               setRollDefaultInput("");
               setTooltip(' "' + target.rollName.value + '" has been added');
             } else {
-              //this is covered by case basis inside of roll check
+              setTooltip(checkRollResult.desc);
             }
           } else {
             setTooltip("Failed add: Name cannot contain spaces");
@@ -161,171 +265,7 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
       setTooltip("Failed add: name is limited to 20 characters");
     }
   }
-  function rollCheck(rollString: String): boolean {
-    rollString = rollString.toLowerCase();
-    rollString = rollString.replaceAll(" ", "");
-    //legal characters:
-    //2d20 || d6
-    // + || * || /
-    //3
-    //var(something)
-    let paranthesis: string[] = ["(", ")"];
-    let legitDigits: string[] = [
-      "0",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-    ];
-    let legitCharacters: String[] = ["d", "v"];
-    //steps to converting:
-    //initial                      d20+(3d20 * var(Dex)) -  3 +var(dex)/ 5
-    //removing spaces and caps:    d20+(3d20*var(dex))-3+3/5
-    //change vars to numbers:      d20+(3d20*12)-3+3/5
-    //changing dice to numbers:    12+(30*12)-3+3/5
-    //change parenthesis to num:   12+360-3+3/5
-    //continue to follow pemdas:   369/5
-    //done:                        73.8
 
-    // crtical errors(that return false):
-    //x empty ("") but is taken care of prior
-    //x parenthesis do not close ((())
-    //x var does not exist (var(fake))
-    //x illegal characters ([#)@$])
-    //x starts or ends with symbol  (* 12 *)
-    //x dice has number on the right of it ("10 + 1d + 3 + d")
-    //(did not do, will catch when rolling) math not possible(for at least the static numbers)
-
-    //full check in one loop(more confusing but less loops)
-    //check for illegal characters and check that dice have digits with them
-
-    //todo get rid of legit digits and do an ascii check
-    let leftParCounter = 0;
-    let rightParCounter = 0;
-    for (let i = 0; i < rollString.length; i++) {
-      let char = rollString.charAt(i);
-      if (legitDigits.some((dig) => dig == char)) {
-        //pass
-      } else if (char == "(") {
-        leftParCounter += 1;
-        if (rollString.length !== i + 1 && rollString.charAt(i + 1) === ")") {
-          setTooltip("Failed add: empty parenthesis");
-          return false;
-        }
-      } else if (char == ")") {
-        rightParCounter += 1;
-        if (rightParCounter > leftParCounter) {
-          setTooltip(
-            'Failed add: Parenthesis do not close: ")" came before "("'
-          );
-          return false;
-        }
-      } else if (legitSymbols.includes(char)) {
-        //symbol checks
-        if (i == 0 || i == rollString.length - 1) {
-          setTooltip("Failed add: symbol used at the start or end");
-          return false;
-        } else if (legitSymbols.includes(rollString.charAt(i - 1))) {
-          setTooltip(
-            'Failed add: two symbols next to eachother "' +
-              char +
-              rollString.charAt(i - 1) +
-              '"'
-          );
-          return false;
-        } else if (rollString.charAt(i - 1) == "(") {
-          setTooltip('Failed add: symbol facing parenthesis "(' + char + '"');
-          return false;
-        } else if (rollString.charAt(i + 1) == ")") {
-          setTooltip('Failed add: symbol facing parenthesis "' + char + ')"');
-          return false;
-        }
-      } else if (char == "d") {
-        //ensure that dice are fully established
-        if (
-          i + 1 === rollString.length ||
-          !legitDigits.some((e) => e == rollString.charAt(i + 1))
-        ) {
-          setTooltip("Dice established but does not have digit following it");
-          return false;
-        }
-      } else if (char == "v") {
-        //ran into a variable(skip it if it fills the var rules)
-        if (
-          i + 4 >= rollString.length ||
-          rollString.substring(i, i + 4) !== "var("
-        ) {
-          setTooltip('Invalid character of "' + char + '"');
-        } else {
-          i += 4;
-          while (char != ")") {
-            i += 1;
-            char = rollString.charAt(i);
-            if (i >= rollString.length) {
-              setTooltip('Failed add: Parenthesis do not close: "var("');
-              return false;
-            }
-          }
-        }
-      } else {
-        setTooltip('Invalid character of "' + char + '"');
-        return false;
-      }
-    }
-
-    if (leftParCounter != rightParCounter) {
-      setTooltip('Failed add: Parenthesis do not close: ")" missing');
-      return false;
-    }
-
-    //check if vars exist(see if it exists in rolls or is an inbuilt ability score)
-    let varList = getVarList(rollString);
-    if (checkVars(varList)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  function getVarList(roll: String): String[] {
-    let varList = [];
-    //first find var(
-    //then find )
-    //inbetween is the var name
-    for (let i = 3; i < roll.length; i++) {
-      if (roll.charAt(i) == "(" && roll.substring(i - 3, i) == "var") {
-        let variable = [];
-        i += 1;
-        while (roll.charAt(i) != ")") {
-          variable.push(roll.charAt(i));
-          i += 1;
-        }
-        varList.push(variable.join(""));
-      }
-    }
-    return varList;
-  }
-  //ensure vars in a roll exist
-  function checkVars(vars: String[]): boolean {
-    for (let i = 0; i < vars.length; i++) {
-      //it does not exist in neither as a generic ability score or another roll
-      let currentVar = vars[i].toLocaleLowerCase();
-      if (
-        !defaultVars.some((e) => e === currentVar) &&
-        !currentRolls.some(
-          (e) => e.roll_name.toLocaleLowerCase() === currentVar
-        )
-      ) {
-        setTooltip('Variable "' + vars[i] + '" does not exist');
-        return false;
-      }
-    }
-    return true;
-  }
   function removeRoll(removedName: string) {
     setCurrentRolls((prev) => {
       let output = prev.filter(
@@ -348,37 +288,53 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
   }
 
   return (
-    <div>
+    <div className="root">
       <h1>Rolls Editor</h1>
-      <div className="horiz">
-        <form style={{ width: "100%" }} onSubmit={addRoll} className="horiz">
-          <div style={{ width: "50%", padding: "0%", marginLeft: "15%" }}>
-            <input
-              placeholder="Perception"
-              className="rollInput"
-              name="rollName"
-              value={rollNameInput}
-              onChange={(e) => setRollNameInput(e.target.value)}
-            />
-            <input
-              placeholder="d20 + var(wis) + var(another_roll) + 3"
-              className="rollInput"
-              name="roll"
-              value={rollDefaultInput}
-              onChange={(e) => setRollDefaultInput(e.target.value)}
-            />
-          </div>
-          <button className="addButton" type="submit">
-            +
-          </button>
-        </form>
+      <form
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+        }}
+        onSubmit={addRoll}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "50%",
+            padding: "0%",
+            marginLeft: "15%",
+          }}
+        >
+          <input
+            placeholder="Perception"
+            className="rollInput"
+            name="rollName"
+            value={rollNameInput}
+            onChange={(e) => setRollNameInput(e.target.value)}
+          />
+          <input
+            placeholder="d20 + var(wis) + var(another_roll) + 3"
+            className="rollInput"
+            name="roll"
+            value={rollDefaultInput}
+            onChange={(e) => setRollDefaultInput(e.target.value)}
+          />
+        </div>
+        <button className="addButton" type="submit">
+          +
+        </button>
         <button className="finishButton" onClick={finish}>
           Finish
         </button>
-      </div>
+      </form>
       <h3>{tooltip}</h3>
       <hr></hr>
-      <div className="horiz" style={{ marginRight: "70%", marginLeft: "5%" }}>
+      <div
+        className="horiz"
+        style={{ marginRight: "70%", marginLeft: "5%", maxHeight: "5vh" }}
+      >
         <input
           style={{ marginLeft: "0px", width: "100%" }}
           placeholder="search by name"
@@ -386,23 +342,25 @@ export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
           onChange={(e) => setSearchInput(e.target.value)}
         ></input>
       </div>
-      {currentRolls
-        .filter((item) =>
-          item.roll_name
-            .toLocaleLowerCase()
-            .includes(searchInput.toLocaleLowerCase())
-        )
-        .sort((a, b) => a.roll_name.localeCompare(b.roll_name))
-        .map((currentRoll) => {
-          return (
-            <RollEditCard
-              key={currentRoll.roll_name}
-              currentRoll={currentRoll}
-              removeRoll={() => removeRoll(currentRoll.roll_name)}
-              editRoll={() => editRoll(currentRoll.roll_name)}
-            ></RollEditCard>
-          );
-        })}
+      <div className="rollList">
+        {currentRolls
+          .filter((item) =>
+            item.roll_name
+              .toLocaleLowerCase()
+              .includes(searchInput.toLocaleLowerCase())
+          )
+          .sort((a, b) => a.roll_name.localeCompare(b.roll_name))
+          .map((currentRoll) => {
+            return (
+              <RollEditCard
+                key={currentRoll.roll_name}
+                currentRoll={currentRoll}
+                removeRoll={() => removeRoll(currentRoll.roll_name)}
+                editRoll={() => editRoll(currentRoll.roll_name)}
+              ></RollEditCard>
+            );
+          })}
+      </div>
     </div>
   );
 };

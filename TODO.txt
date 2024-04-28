@@ -1,4 +1,3 @@
 Math for the roller to actually work
-Add default rolls(Saves, Skills)
-Add Conditions(Awaken, Ability Enhancers)
-Add turn order(Action(Attack, Spell), Bonus Action, Reaction, Nothing)
+Add Conditions(Awaken, Ability Enhancers, Health Enhancers)
+Add turn order(Action(Attack, Spell), Bonus Action, Reaction, Nothing)-> tag system

@@ -12,6 +12,11 @@ struct Roll {
     default_roll: String,
 }
 #[derive(Serialize, Deserialize)]
+struct CharacterInfo {
+    info_type: String,
+    input: String,
+}
+#[derive(Serialize, Deserialize)]
 struct AbilityScore {
     ability: String,
     score: i8,
@@ -77,6 +82,21 @@ async fn get_file_path_by_file_dialog() -> Result<String, ()> {
     return Ok(file.unwrap().path().to_str().unwrap().to_owned());
 }
 #[tauri::command]
+fn overwrite_character_info(character_info_list: Vec<CharacterInfo>) -> Result<(), ()> {
+    let conn = Connection::open("userPage").unwrap();
+    //delete all old ones
+    conn.execute("DELETE FROM characterInfo", ())
+        .expect("Failed to delete");
+    for character_info in character_info_list {
+        conn.execute(
+            "INSERT INTO characterInfo(info_type,input) VALUES((?1),(?2))",
+            (character_info.info_type, character_info.input),
+        )
+        .expect("failed to add");
+    }
+    Ok(())
+}
+#[tauri::command]
 fn overwrite_ability_scores(ability_scores: Vec<AbilityScore>) -> Result<(), ()> {
     let conn = Connection::open("userPage").unwrap();
     //delete all old ones
@@ -137,7 +157,22 @@ fn grab_rolls() -> Result<Vec<Roll>, ()> {
     Ok(rolls)
 }
 #[tauri::command]
-fn get_lists() -> Result<(Vec<Roll>, Vec<AbilityScore>), ()> {
+fn grab_character_info() -> Result<Vec<CharacterInfo>, ()> {
+    let conn = Connection::open("userPage").unwrap();
+    let query = "SELECT * FROM characterInfo";
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut character_info_list: Vec<CharacterInfo> = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        character_info_list.push(CharacterInfo {
+            info_type: row.get(0).unwrap(),
+            input: row.get(1).unwrap(),
+        });
+    }
+    Ok(character_info_list)
+}
+#[tauri::command]
+fn get_lists() -> Result<(Vec<Roll>, Vec<AbilityScore>, Vec<CharacterInfo>), ()> {
     let conn = Connection::open("userPage").unwrap();
     establish_sql(&conn); //if not already set up
     let query = "SELECT * FROM rolls";
@@ -161,7 +196,18 @@ fn get_lists() -> Result<(Vec<Roll>, Vec<AbilityScore>), ()> {
             score: row.get(1).unwrap(),
         });
     }
-    return Ok((rolls, ability_scores));
+    //
+    let query = "SELECT * FROM characterInfo";
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut character_info_list: Vec<CharacterInfo> = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        character_info_list.push(CharacterInfo {
+            info_type: row.get(0).unwrap(),
+            input: row.get(1).unwrap(),
+        });
+    }
+    return Ok((rolls, ability_scores, character_info_list));
 }
 
 fn main() {
@@ -169,8 +215,10 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_lists,
             overwrite_ability_scores,
+            overwrite_character_info,
             overwrite_rolls,
             grab_ability_scores,
+            grab_character_info,
             grab_rolls,
             get_file_path_by_file_dialog,
             get_data_from_excel
@@ -194,6 +242,15 @@ fn establish_sql(conn: &Connection) {
             "CREATE TABLE if not exists abilityScores(
             ability    TEXT PRIMARY KEY,
             score      INTEGER
+        )",
+            (),
+        )
+        .is_ok();
+    let _ = conn
+        .execute(
+            "CREATE TABLE if not exists characterInfo(
+            info_type    TEXT PRIMARY KEY,
+            input        TEXT
         )",
             (),
         )

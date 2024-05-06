@@ -5,14 +5,15 @@ import { checkRoll, getVarList } from "../../helperFunctions";
 import { RollEditCard } from "./RollEditCard";
 import { invoke } from "@tauri-apps/api";
 import { useRouter } from "next/navigation";
+import { Roll } from "@/app/globalInterfaces";
 interface EditAbilityScoreProps {
-  rolls: { roll_name: string; default_roll: string }[];
+  rolls: Roll[];
 }
 const legitSymbols: String[] = ["+", "-", "*", "/"];
 const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
 export const EditRolls: React.FC<EditAbilityScoreProps> = ({ rolls }) => {
   const router = useRouter();
-  let defaultRolls: { roll_name: string; default_roll: string }[] = [
+  let defaultRolls: Roll[] = [
     {
       roll_name: "Initiative",
       default_roll: "d20 + var(dex)",

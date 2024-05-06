@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { checkRoll } from "../helperFunctions";
+import { Roll, AbilityScore } from "../globalInterfaces";
+import "./home.css";
 import "react-toastify/dist/ReactToastify.css";
 interface HistoryRoll {
   id: number;
@@ -8,8 +10,8 @@ interface HistoryRoll {
   type: string;
 }
 interface DiceBuilderProps {
-  abilityScores: { ability: string; score: number }[];
-  rolls: { roll_name: string; default_roll: string }[];
+  abilityScores: AbilityScore[];
+  rolls: Roll[];
 }
 //TODO fix history and implement notifications on the tool tips
 export const DiceBuilder: React.FC<DiceBuilderProps> = ({
@@ -278,7 +280,7 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                   return (
                     <tr
                       key={ability.ability}
-                      className="rollRow"
+                      className="row"
                       onClick={() =>
                         setCurrentRoll((cur) => {
                           return (
@@ -327,7 +329,7 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                   return (
                     <tr
                       key={roll.roll_name}
-                      className="rollRow"
+                      className="row"
                       onClick={() =>
                         setCurrentRoll((cur) => {
                           return cur + " var(" + roll.roll_name + ") ";
@@ -367,7 +369,7 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                   return (
                     <tr
                       key={historyRoll.id}
-                      className="rollRow"
+                      className="row"
                       onClick={() =>
                         setCurrentRoll((cur) => {
                           return cur + " (" + historyRoll.roll + ")";

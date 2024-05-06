@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
+import { AbilityScore } from "@/app/globalInterfaces";
 import "./editor.css";
 interface EditAbilityScoreProps {
-  abilityScores: { ability: string; score: number }[];
+  abilityScores: AbilityScore[];
 }
 export const EditAbilityScore: React.FC = () => {
   const [strength, setStrength] = useState(10);
@@ -16,9 +17,8 @@ export const EditAbilityScore: React.FC = () => {
   const router = useRouter();
   const [submitDisabled, setSubmitDisabled] = useState(false);
 
-  //{ ability: string; score: number }[]
   useEffect(() => {
-    invoke<{ ability: string; score: number }[]>("grab_ability_scores", {})
+    invoke<AbilityScore[]>("grab_ability_scores", {})
       .then((abilityScores) => {
         for (let i = 0; i < abilityScores.length; i++) {
           let abilityScore = abilityScores[i];

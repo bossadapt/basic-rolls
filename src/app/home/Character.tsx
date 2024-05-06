@@ -2,11 +2,10 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./character.css";
 import "./home.css";
 import { ToastContainer, toast } from "react-toastify";
+import { CharacterInfo } from "../globalInterfaces";
 interface CharacterProps {
-  characterInfo: { info_type: string; input: string }[];
-  setCharacterInfo: Dispatch<
-    SetStateAction<{ info_type: string; input: string }[]>
-  >;
+  characterInfo: CharacterInfo[];
+  setCharacterInfo: Dispatch<SetStateAction<CharacterInfo[]>>;
 }
 
 export const Character: React.FC<CharacterProps> = ({

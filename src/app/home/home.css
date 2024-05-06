@@ -9,6 +9,7 @@
 }
 .categoryTitle {
   margin-bottom: 0;
+  margin-top: 10px;
   font-size: 23px;
 }
 .abilityScoreText {
@@ -40,11 +41,11 @@
   top: 0;
   background-color: rgb(83, 82, 82);
 }
-.rollRow {
+.row {
   background-color: grey;
   overflow: hidden;
 }
-.rollRow:hover {
+.roll:hover {
   cursor: pointer;
 }
 .horiz {

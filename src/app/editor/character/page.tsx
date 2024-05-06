@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ToastContainer, toast } from "react-toastify";
 import { checkRoll } from "@/app/helperFunctions";
+import { CharacterInfo } from "@/app/globalInterfaces";
 import "react-toastify/dist/ReactToastify.css";
 interface CharacterInfoProps {
-  characterInfoList: { info_type: string; input: string }[];
+  characterInfoList: CharacterInfo[];
 }
-export const CharacterInfo: React.FC<CharacterInfoProps> = ({
+export const Character: React.FC<CharacterInfoProps> = ({
   characterInfoList,
 }) => {
   const router = useRouter();
@@ -87,4 +88,4 @@ export const CharacterInfo: React.FC<CharacterInfoProps> = ({
     </div>
   );
 };
-export default CharacterInfo;
+export default Character;

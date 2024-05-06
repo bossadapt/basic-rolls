@@ -2,17 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
+import { Roll, AbilityScore, CharacterInfo } from "../globalInterfaces";
 export const Editor: React.FC = () => {
   const [view, setView] = useState(<div className="loader"></div>);
   const router = useRouter();
   useEffect(() => {
-    invoke<
-      [
-        { rollName: string; defaultRoll: string; rollType: string }[],
-        { ability: string; score: number }[],
-        { infoType: string; input: string }[]
-      ]
-    >("get_lists", {})
+    invoke<[Roll[], AbilityScore[], CharacterInfo[]]>("get_lists", {})
       .then((result) => {
         const [rolls, abilityScores, characterInfoList] = result;
         if (characterInfoList.length == 0) {
@@ -26,7 +21,8 @@ export const Editor: React.FC = () => {
           router.push("/editor/rolls");
         } else {
           console.log("prerequisites fufilled entering main screen");
-          router.push("../home");
+          router.push("/editor/conditions");
+          //router.push("../home");
         }
         console.log("finished grab");
       })

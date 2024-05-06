@@ -1,0 +1,73 @@
+.conditionContainerCollection {
+  display: flex;
+  flex-direction: column;
+  width: 31%;
+  max-width: 31%;
+  overflow-y: auto;
+}
+.conditionContainerUnselected {
+  border-top: 2px;
+  border-bottom: 2px;
+  border-right: 0px;
+  border-left: 0px;
+  background-color: grey;
+  border-style: solid;
+  border-color: darkslategrey;
+}
+.conditionContainerSelected {
+  border-top: 5px;
+  border-bottom: 5px;
+  border-right: 0px;
+  border-left: 0px;
+  border-color: black;
+  border-style: ridge;
+  background-color: #383838;
+}
+.conditionContainerTitle {
+  user-select: none;
+  color: black;
+  margin-bottom: 12px;
+}
+.conditionContainerLength {
+  user-select: none;
+  margin: 0%;
+}
+.conditionContainerChanges {
+  user-select: none;
+  text-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0px;
+  margin-bottom: 10px;
+}
+
+td {
+  text-align: center;
+  align-items: center;
+}
+td > input {
+  width: 90%;
+}
+td > button {
+  width: 50%;
+  height: 50%;
+  color: red;
+  background-color: #383838;
+}
+table {
+  width: 100%;
+}
+thead {
+  background-color: #383838;
+  color: white;
+}
+tbody {
+  background-color: grey;
+}
+
+.editorContainer {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1%;
+  width: 64%;
+}

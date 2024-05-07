@@ -12,3 +12,16 @@ export interface CharacterInfo {
   info_type: string;
   input: string;
 }
+
+export interface Change {
+  name: string;
+  changeEffect: string;
+}
+export interface Condition {
+  name: string;
+  turnBased: boolean;
+  length: number;
+  rollsChanges: Change[];
+  abilityScoresChanges: Change[];
+  characterInfoChanges: Change[];
+}

@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { Condition } from "./page";
-import { CharacterInfo } from "@/app/globalInterfaces";
+import { CharacterInfo, Condition } from "@/app/globalInterfaces";
 interface CharacterEffectsProps {
   category: string;
   characterInfoList: CharacterInfo[];
@@ -14,18 +13,11 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
   condition,
   setCondition,
 }) => {
-  let currentChangeList = condition?.changeList.find((list) => {
-    list.category == category;
-  });
   function updateItemChange(changeName: string, newChange: string) {
     setCondition((oldCondition) => {
-      oldCondition!.changeList
-        .find((list) => {
-          list.category == category;
-        })!
-        .changes.find((change) => {
-          change.name == changeName;
-        })!.changeEffect = newChange;
+      oldCondition!.characterInfoChanges.find((change) => {
+        change.name == changeName;
+      })!.changeEffect = newChange;
       return oldCondition;
     });
   }
@@ -44,7 +36,7 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
         >
           {categoryList
             ?.filter((originalItem) => {
-              return !currentChangeList?.changes.some(
+              return !condition?.characterInfoChanges?.some(
                 (changeItem) => changeItem.name === originalItem.info_type
               );
             })
@@ -76,7 +68,7 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
           </tr>
         </thead>
         <tbody>
-          {currentChangeList?.changes.map((item) => {
+          {condition?.characterInfoChanges?.map((item) => {
             return (
               <tr>
                 <td>{item.name}</td>

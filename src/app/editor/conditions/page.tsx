@@ -1,33 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CharacterEffectTable } from "./CharacterEffectTable";
 import "./conditions.css";
-import { Roll, AbilityScore, CharacterInfo } from "@/app/globalInterfaces";
+import {
+  Roll,
+  AbilityScore,
+  CharacterInfo,
+  Condition,
+} from "@/app/globalInterfaces";
+import { invoke } from "@tauri-apps/api";
 interface ConditionProps {
   rolls: Roll[];
   abilityScores: AbilityScore[];
   characterInfoList: CharacterInfo[];
-}
-export interface Change {
-  name: string;
-  changeEffect: string;
-}
-export interface ChangeList {
-  category: string;
-  changes: Change[];
-}
-export interface Condition {
-  conditionName: string;
-  conditionLength: number;
-  changeList: ChangeList[];
+  conditionList: Condition[];
 }
 export const Conditions: React.FC<ConditionProps> = ({
-  abilityScores,
   rolls,
+  abilityScores,
   characterInfoList,
+  conditionList,
 }) => {
   const [focusedCondition, setFocusedCondition] = useState<Condition>();
-  const [conditions, setConditions] = useState<Condition[]>([]);
+  const [conditions, setConditions] = useState<Condition[]>(
+    conditionList || []
+  );
+  if (!abilityScores || !rolls || !characterInfoList) {
+    useEffect(() => {
+      invoke<AbilityScore[]>("grab_ability_scores", {}).then(
+        (abilityScores) => {}
+      );
+    });
+  }
   return (
     <div
       style={{
@@ -44,20 +48,44 @@ export const Conditions: React.FC<ConditionProps> = ({
             <input placeholder="Search Name"></input>
             <button>NEW</button>
           </div>
-          <div className="conditionContainerSelected">
-            <h3 className="conditionContainerTitle">Name Example</h3>
-            <h4 className="conditionContainerLength">12 turns</h4>
-            <p className="conditionContainerChanges">
-              Character, Ability Score, Rolls
-            </p>
-          </div>
-          <div className="conditionContainerUnselected">
-            <h3 className="conditionContainerTitle">Name Example</h3>
-            <h4 className="conditionContainerLength">12 turns</h4>
-            <p className="conditionContainerChanges">
-              Character, Ability Score, Rolls
-            </p>
-          </div>
+          {conditions.map((condit) => {
+            // designate wheather its focused or not
+            let containerType = "conditionContainerUnselected";
+            if (focusedCondition === condit) {
+              containerType = "conditionContainerSelected";
+            }
+            //create length type
+            let lengthType = "mana";
+            if (condit.turnBased) {
+              lengthType = "rounds";
+            }
+            //check what lists were altered
+            let changeListString = "";
+            if (condit.characterInfoChanges.length != 0) {
+              changeListString = changeListString + "Character";
+            }
+            if (condit.abilityScoresChanges.length != 0) {
+              if (changeListString !== "") {
+                changeListString = changeListString + ",";
+              }
+              changeListString = changeListString + "Ability Scores";
+            }
+            if (condit.rollsChanges.length != 0) {
+              if (changeListString !== "") {
+                changeListString = changeListString + ",";
+              }
+              changeListString = changeListString + "Rolls";
+            }
+            return (
+              <div className={containerType}>
+                <h3 className="conditionContainerTitle">{condit.name}</h3>
+                <h4 className="conditionContainerLength">
+                  {condit.length + " " + lengthType}
+                </h4>
+                <p className="conditionContainerChanges">{changeListString}</p>
+              </div>
+            );
+          })}
         </div>
 
         <div className="editorContainer">

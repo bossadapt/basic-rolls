@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./character.css";
-import "./home.css";
+import "../home.css";
 import { ToastContainer, toast } from "react-toastify";
-import { CharacterInfo } from "../globalInterfaces";
+import { CharacterInfo } from "../../globalInterfaces";
 interface CharacterProps {
   characterInfo: CharacterInfo[];
   setCharacterInfo: Dispatch<SetStateAction<CharacterInfo[]>>;

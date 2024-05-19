@@ -1,12 +1,16 @@
+import { Roll, importantCharCode } from "./globalInterfaces";
 const legitSymbols: String[] = ["+", "-", "*", "/"];
 const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
 export function checkRoll(
   rollString: string,
-  currentRolls: { roll_name: string; default_roll: string }[]
+  currentRolls: Roll[]
 ): {
   result: boolean;
   desc: string;
 } {
+  if (rollString === "") {
+    return { result: true, desc: "roll was left empty" };
+  }
   rollString = rollString.toLowerCase();
   rollString = rollString.replaceAll(" ", "");
   //legal characters:
@@ -14,19 +18,6 @@ export function checkRoll(
   // + || * || /
   //3
   //var(something)
-  let paranthesis: string[] = ["(", ")"];
-  let legitDigits: string[] = [
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-  ];
   let legitCharacters: String[] = ["d", "v"];
   //steps to converting:
   //initial                      d20+(3d20 * var(Dex)) -  3 +var(dex)/ 5
@@ -54,7 +45,11 @@ export function checkRoll(
   let rightParCounter = 0;
   for (let i = 0; i < rollString.length; i++) {
     let char = rollString.charAt(i);
-    if (legitDigits.some((dig) => dig == char)) {
+    let charCharCode = char.charCodeAt(0);
+    if (
+      charCharCode >= importantCharCode.digitStart &&
+      charCharCode <= importantCharCode.digitEnd
+    ) {
       //pass
     } else if (char == "(") {
       leftParCounter += 1;
@@ -85,12 +80,12 @@ export function checkRoll(
             rollString.charAt(i - 1) +
             '"',
         };
-      } else if (rollString.charAt(i - 1) == "(") {
+      } else if (rollString.charAt(i - 1) === "(") {
         return {
           result: false,
           desc: 'Failed add: symbol facing parenthesis "(' + char + '"',
         };
-      } else if (rollString.charAt(i + 1) == ")") {
+      } else if (rollString.charAt(i + 1) === ")") {
         return {
           result: false,
           desc: 'Failed add: symbol facing parenthesis "' + char + ')"',
@@ -100,7 +95,10 @@ export function checkRoll(
       //ensure that dice are fully established
       if (
         i + 1 === rollString.length ||
-        !legitDigits.some((e) => e == rollString.charAt(i + 1))
+        !(
+          rollString.charCodeAt(i + 1) >= importantCharCode.digitStart &&
+          rollString.charCodeAt(i + 1) <= importantCharCode.digitEnd
+        )
       ) {
         return {
           result: false,
@@ -156,7 +154,7 @@ export function checkRoll(
 }
 export function checkVars(
   vars: String[],
-  currentRolls: { roll_name: string; default_roll: string }[]
+  currentRolls: Roll[]
 ): {
   result: boolean;
   desc: string;
@@ -166,7 +164,7 @@ export function checkVars(
     let currentVar = vars[i].toLocaleLowerCase();
     if (
       !defaultVars.some((e) => e === currentVar) &&
-      !currentRolls.some((e) => e.roll_name.toLocaleLowerCase() === currentVar)
+      !currentRolls.some((e) => e.name.toLocaleLowerCase() === currentVar)
     ) {
       return {
         result: false,
@@ -196,4 +194,106 @@ export function getVarList(roll: String): String[] {
     }
   }
   return varList;
+}
+//trim should be ran before this to ensure usererror is limited
+export function nameValidation(nameToVerify: string): {
+  result: boolean;
+  desc: string;
+} {
+  if (nameToVerify.length > 20) {
+    return { result: false, desc: "name was larger than 20 characters" };
+  }
+  if (nameToVerify === "") {
+    return { result: false, desc: "name was empty" };
+  }
+  //much like regex but with more clear response for user error checking reasons
+  for (let i = 0; i < nameToVerify.length; i++) {
+    let currentCharCode = nameToVerify.charCodeAt(i);
+    if (
+      !(
+        currentCharCode >= importantCharCode.lowerCaseStart &&
+        currentCharCode <= importantCharCode.lowerCaseEnd
+      ) &&
+      !(
+        currentCharCode >= importantCharCode.upperCaseStart &&
+        currentCharCode <= importantCharCode.upperCaseEnd
+      ) &&
+      !(
+        currentCharCode >= importantCharCode.digitStart &&
+        currentCharCode <= importantCharCode.digitEnd
+      ) &&
+      !(currentCharCode === importantCharCode.underScore)
+    ) {
+      return {
+        result: false,
+        desc:
+          'invalid character "' +
+          nameToVerify.charAt(i) +
+          '" at character #' +
+          (i + 1),
+      };
+    }
+  }
+
+  return { result: true, desc: nameToVerify };
+}
+export function rollTraceTest(
+  initialRoll: Roll,
+  currentRoll: Roll,
+  rolls: Roll[]
+): {
+  result: boolean;
+  desc: string;
+} {
+  let currentVarList = getVarList(currentRoll.roll);
+  //if its empty or only contains
+  if (
+    !currentVarList.some((e) => !defaultVars.includes(e.toLocaleLowerCase()))
+  ) {
+    return { result: true, desc: "" };
+  } else if (
+    currentVarList.some(
+      (currentVar) =>
+        currentVar.toLocaleLowerCase() === initialRoll.name.toLocaleLowerCase()
+    )
+  ) {
+    return {
+      result: false,
+      desc:
+        'Failed Finish: rolls call each other infinitely between "' +
+        initialRoll.name +
+        '" and "' +
+        currentRoll.name +
+        '"',
+    };
+  } else {
+    let responses: {
+      result: boolean;
+      desc: string;
+    }[] = [];
+    for (let i = 0; i < currentVarList.length; i++) {
+      let currentVar = currentVarList[i].toLocaleLowerCase();
+      if (!defaultVars.includes(currentVar)) {
+        responses.push(
+          rollTraceTest(
+            initialRoll,
+            rolls.find((item) => item.name.toLocaleLowerCase() === currentVar)!,
+            rolls
+          )
+        );
+      }
+    }
+    for (let i = 0; i < responses.length; i++) {
+      if (!responses[i]) {
+        return {
+          result: false,
+          desc: responses[i].desc,
+        };
+      }
+    }
+    return {
+      result: true,
+      desc: "",
+    };
+  }
 }

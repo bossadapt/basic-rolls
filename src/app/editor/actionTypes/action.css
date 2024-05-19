@@ -1,0 +1,85 @@
+.root {
+  max-height: 100vh;
+  max-width: 100vh;
+}
+.row {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+}
+.editorTable {
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.editorTable > thead > tr > th {
+  color: darkgrey;
+  text-align: left;
+}
+.editorTable > tbody > tr > td {
+  text-align: left;
+  color: white;
+}
+.displayTable {
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%;
+  border-collapse: collapse;
+}
+.displayTable > thead > tr > th {
+  text-align: center;
+  color: darkgrey;
+}
+.displayTable > tbody > tr > th {
+  text-align: center;
+  color: #4ba4a6;
+}
+.displayTable > tbody > tr > td {
+  text-align: center;
+  color: white;
+}
+.displayTable > tbody > tr,
+.displayTable > thead > tr {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 3px;
+  border-style: groove;
+  border-color: white;
+}
+.delButton {
+  background-color: black;
+  color: red;
+  width: 10%;
+  height: 50px;
+  line-height: 50px;
+  margin: auto;
+}
+h2 {
+  text-wrap: wrap;
+  overflow: hidden;
+  overflow-wrap: break-word;
+}
+th {
+  text-wrap: wrap;
+}
+.column {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+h4 {
+  justify-content: center;
+  vertical-align: center;
+  text-wrap: nowrap;
+  display: flex;
+  color: grey;
+}
+.listInput {
+  height: fit-content;
+  width: auto;
+  margin-left: 0%;
+  margin-right: 0%;
+  font-size: 20px;
+  width: 50px;
+}

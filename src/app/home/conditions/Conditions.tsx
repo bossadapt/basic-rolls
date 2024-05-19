@@ -1,5 +1,8 @@
-import "./home.css";
-interface ConditionsProps {}
+import "../home.css";
+import { Condition } from "../../globalInterfaces";
+interface ConditionsProps {
+  conditions: Condition[];
+}
 
 export const Conditions: React.FC<ConditionsProps> = () => {
   return (

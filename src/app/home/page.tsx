@@ -1,12 +1,18 @@
 "use client";
 import "./home.css";
-import { Character } from "./Character";
-import { Conditions } from "./Conditions";
-import { Currency } from "./Currency";
-import { DiceBuilder } from "./DiceBuilder";
+import { Character } from "./character/Character";
+import { Conditions } from "./conditions/Conditions";
+import { Currency } from "./currency/Currency";
+import { DiceBuilder } from "./diceBuilder/DiceBuilder";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api";
-import { AbilityScore, Roll, CharacterInfo } from "../globalInterfaces";
+import {
+  AbilityScore,
+  Roll,
+  CharacterInfo,
+  Condition,
+  ListsResult,
+} from "../globalInterfaces";
 interface homeProps {}
 export const Home: React.FC = () => {
   let defailtAbility: AbilityScore[] = [
@@ -25,16 +31,20 @@ export const Home: React.FC = () => {
   ];
   const [abilityScores, setAbilityScores] = useState(defailtAbility);
   const [characterInfo, setCharacterInfo] = useState(defailtCharacterInfo);
+  const [conditions, setConditions] = useState<Condition[]>([]);
   let defailtRoll: Roll[] = [];
   const [rolls, setRolls] = useState(defailtRoll);
   useEffect(() => {
-    invoke<[Roll[], AbilityScore[], CharacterInfo[]]>("get_lists", {})
+    console.log("listsCalledStart");
+    invoke<ListsResult>("get_lists", {})
       .then((result) => {
-        setRolls(result[0]);
-        setAbilityScores(result[1]);
-        setCharacterInfo(result[2]);
+        setRolls(result.rolls);
+        setAbilityScores(result.abilityScores);
+        setCharacterInfo(result.characterInfo);
+        setConditions(result.conditions);
       })
       .catch(console.error);
+    console.log("listsCalledEnded");
   }, []);
   return (
     <div className="root">
@@ -46,7 +56,7 @@ export const Home: React.FC = () => {
           />
         </div>
         <div>
-          <Conditions />
+          <Conditions conditions={conditions} />
         </div>
         <div>
           <Currency />

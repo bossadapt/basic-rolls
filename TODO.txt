@@ -1,3 +1,9 @@
-Math for the roller to actually work
+FIX crit ex: /r d2d20 + 2 instead of /r 2d20 +2
 Add Conditions(Awaken, Ability Enhancers, Health Enhancers)
-Add turn order(Action(Attack, Spell), Bonus Action, Reaction, Nothing)-> tag system
+fix character look
+make it so that hitting enter in the character change just automatically procs the add function
+Math for the roller to actually work
+Add turn order(Action(Attack, Spell), Bonus Action, Reaction, Nothing)-> tag system to rolls
+add turn system to dice builder and character to refresh health/mana and abilities
+make currency toggleable out with inventory
+finish conditions with the new rolls additions

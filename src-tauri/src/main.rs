@@ -4,10 +4,32 @@ use std::fmt::format;
 
 use calamine::{open_workbook, Data, RangeDeserializerBuilder, Reader, Xlsx};
 use rfd::AsyncFileDialog;
-use rusqlite::Connection;
+use rusqlite::{Connection, ToSql};
 use serde::{Deserialize, Serialize};
 use tauri::{api::file, http::Request};
+//these need to be this capitalization to be properly turned in tsx object
 
+#[derive(Serialize, Deserialize)]
+struct ActionType {
+    name: String,
+    limits: Vec<ActionLimit>,
+}
+#[derive(Serialize, Deserialize)]
+struct ActionLimit {
+    time: String,
+    active: bool,
+    useCount: i32,
+    timeCount: i32,
+}
+
+#[derive(Serialize, Deserialize)]
+struct GetListsResult {
+    rolls: Vec<Roll>,
+    abilityScores: Vec<AbilityScore>,
+    characterInfo: Vec<CharacterInfo>,
+    conditions: Vec<Condition>,
+    actionTypes: Vec<ActionType>,
+}
 #[derive(Serialize, Deserialize)]
 struct Roll {
     roll_name: String,
@@ -111,6 +133,7 @@ async fn get_file_path_by_file_dialog() -> Result<String, ()> {
 }
 #[tauri::command]
 fn overwrite_character_info(character_info_list: Vec<CharacterInfo>) -> Result<(), ()> {
+    println!("Overwrite character info started");
     let conn = Connection::open("userPage").unwrap();
     //delete all old ones
     conn.execute("DELETE FROM characterInfo", ())
@@ -122,10 +145,12 @@ fn overwrite_character_info(character_info_list: Vec<CharacterInfo>) -> Result<(
         )
         .expect("failed to add");
     }
+    println!("Overwrite character info finished");
     Ok(())
 }
 #[tauri::command]
 fn overwrite_ability_scores(ability_scores: Vec<AbilityScore>) -> Result<(), ()> {
+    println!("Overwrite ability_scores info started");
     let conn = Connection::open("userPage").unwrap();
     //delete all old ones
     conn.execute("DELETE FROM abilityScores", ())
@@ -137,10 +162,12 @@ fn overwrite_ability_scores(ability_scores: Vec<AbilityScore>) -> Result<(), ()>
         )
         .expect("failed to add");
     }
+    println!("Overwrite ability_scores info ended");
     Ok(())
 }
 #[tauri::command]
 fn overwrite_rolls(new_rolls: Vec<Roll>) -> Result<(), ()> {
+    println!("Overwrite rolls started");
     let conn = Connection::open("userPage").unwrap();
     //delete all old ones
     conn.execute("DELETE FROM rolls", ())
@@ -152,11 +179,64 @@ fn overwrite_rolls(new_rolls: Vec<Roll>) -> Result<(), ()> {
         )
         .expect("failed to add");
     }
+    println!("Overwrite rolls finished");
     Ok(())
 }
 
 #[tauri::command]
+fn overwrite_action_types(new_action_types: Vec<ActionType>) -> Result<(), ()> {
+    println!("Started overwriteing action types");
+    let conn = Connection::open("userPage").unwrap();
+    //get all ability types to hunt down the temp tables
+    let names: Vec<String> = grab_action_types_names().unwrap();
+    //delete all actionTypeLists
+    for name in names {
+        let query = format!("DROP TABLE IF EXISTS AT_{}", name);
+        conn.execute(query.as_str(), []).expect("Failed to delete");
+    }
+    conn.execute("DELETE FROM action_types", ())
+        .expect("Failed to delete");
+    //adding new lists
+    for action_type in new_action_types {
+        let table_name = format!("AT_{}", action_type.name);
+        //adding to the main action types
+        let _ = conn.execute(
+            "INSERT INTO action_types(name) VALUES((?1))",
+            [action_type.name],
+        );
+        //creating a temp branch table to hold the limits
+
+        let req = format!(
+            "CREATE TABLE if not exists {}(
+            time TEXT PRIMARY KEY,
+            active Integer,
+            useCount Integer,
+            timeCount Integer
+        )",
+            table_name.to_owned()
+        );
+        conn.execute(&req, ()).unwrap();
+        //fill the limits with each of the four
+        for limit in action_type.limits {
+            //convert to i128 for lossless false > 0
+            let req = format!(
+                "INSERT INTO {}(time,active,useCount,timeCount) VALUES('({})',({}),({}),({}))",
+                table_name.to_owned(),
+                limit.time,
+                limit.active as i32,
+                limit.useCount.to_string(),
+                limit.timeCount.to_string(),
+            );
+            let test2 = conn.execute(req.as_str(), ()).unwrap();
+            print!("TABLE IS {}", test2);
+        }
+    }
+    println!("Finished overwriteing action types");
+    return Ok(());
+}
+#[tauri::command]
 fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
+    println!("Overwrite conditions started");
     let conn = Connection::open("userPage").unwrap();
     //delete all old ones
     conn.execute("DELETE FROM conditions", ())
@@ -210,11 +290,13 @@ fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
             .expect("failed to add character_info_changes");
         }
     }
+    println!("Overwrite conditions ended");
     Ok(())
 }
 //TODO overwrite conditions
 #[tauri::command]
 fn grab_ability_scores() -> Result<Vec<AbilityScore>, ()> {
+    println!("grab ability started");
     let conn = Connection::open("userPage").unwrap();
     let query = "SELECT * FROM abilityScores";
     let mut stmt = conn.prepare(&query).unwrap();
@@ -226,10 +308,25 @@ fn grab_ability_scores() -> Result<Vec<AbilityScore>, ()> {
             score: row.get(1).unwrap(),
         });
     }
+    println!("grab ability ended");
     Ok(ability_scores)
 }
 #[tauri::command]
+fn grab_action_types_names() -> Result<Vec<String>, ()> {
+    let conn = Connection::open("userPage").unwrap();
+    let query = "SELECT * FROM action_types";
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut action_types_names: Vec<String> = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        action_types_names.push(row.get(0).unwrap());
+    }
+    println!("grab ability ended");
+    Ok(action_types_names)
+}
+#[tauri::command]
 fn grab_rolls() -> Result<Vec<Roll>, ()> {
+    println!("grab rolls started");
     let conn = Connection::open("userPage").unwrap();
     let query = "SELECT * FROM rolls";
     let mut stmt = conn.prepare(&query).unwrap();
@@ -241,10 +338,12 @@ fn grab_rolls() -> Result<Vec<Roll>, ()> {
             default_roll: row.get(1).unwrap(),
         });
     }
+    println!("grab rolls ended");
     Ok(rolls)
 }
 #[tauri::command]
 fn grab_character_info() -> Result<Vec<CharacterInfo>, ()> {
+    println!("grab characterInfo started");
     let conn = Connection::open("userPage").unwrap();
     let query = "SELECT * FROM characterInfo";
     let mut stmt = conn.prepare(&query).unwrap();
@@ -256,10 +355,12 @@ fn grab_character_info() -> Result<Vec<CharacterInfo>, ()> {
             input: row.get(1).unwrap(),
         });
     }
+    println!("grab characterInfo ended");
     Ok(character_info_list)
 }
 #[tauri::command]
 fn grab_conditions() -> Result<Vec<Condition>, ()> {
+    println!("grab conditions started");
     let conn = Connection::open("userPage").unwrap();
     let query = "SELECT * FROM conditions";
     let mut stmt = conn.prepare(&query).unwrap();
@@ -344,29 +445,56 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
             }
         }
     }
-
+    println!("grab conditions ended");
     Ok(condition_list)
 }
+
 //Vec<Condition>,
 #[tauri::command]
-fn get_lists() -> Result<
-    (
-        Vec<Roll>,
-        Vec<AbilityScore>,
-        Vec<CharacterInfo>,
-        Vec<Condition>,
-    ),
-    (),
-> {
+fn get_lists() -> Result<GetListsResult, ()> {
+    println!("Started getting Lists");
     let conn = Connection::open("userPage").unwrap();
     establish_sql(&conn); //if not already set up
     let rolls = grab_rolls()?;
     let ability_scores = grab_ability_scores()?;
     let character_info_list = grab_character_info()?;
     let conditions = grab_conditions()?;
-    return Ok((rolls, ability_scores, character_info_list, conditions));
+    let action_types = grab_action_types()?;
+    println!("finished getting Lists");
+    return Ok(GetListsResult {
+        rolls: rolls,
+        abilityScores: ability_scores,
+        characterInfo: character_info_list,
+        conditions: conditions,
+        actionTypes: action_types,
+    });
 }
 
+#[tauri::command]
+fn grab_action_types() -> Result<Vec<ActionType>, ()> {
+    println!("Started grabing action types");
+    let conn = Connection::open("userPage").unwrap();
+    let names: Vec<String> = grab_action_types_names().unwrap();
+    let mut action_types: Vec<ActionType> = Vec::new();
+    for name in names {
+        let query = format!("SELECT * FROM AT_{}", name);
+        let mut stmt = conn.prepare(&query).unwrap();
+        let mut rows = stmt.query([]).unwrap();
+        let mut limits: Vec<ActionLimit> = Vec::new();
+        while let Some(row) = rows.next().unwrap() {
+            limits.push(ActionLimit {
+                time: row.get(0).unwrap(),
+                active: row.get(1).unwrap(),
+                useCount: row.get(2).unwrap(),
+                timeCount: row.get(3).unwrap(),
+            });
+        }
+        action_types.push(ActionType { name, limits });
+    }
+
+    println!("Finished grabing action types");
+    return Ok(action_types);
+}
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -375,10 +503,12 @@ fn main() {
             overwrite_character_info,
             overwrite_rolls,
             overwrite_conditions,
+            overwrite_action_types,
             grab_ability_scores,
             grab_character_info,
             grab_rolls,
             grab_conditions,
+            grab_action_types,
             get_file_path_by_file_dialog,
             get_data_from_excel
         ])
@@ -417,7 +547,7 @@ fn establish_sql(conn: &Connection) {
         "CREATE TABLE if not exists conditions(
             name TEXT PRIMARY KEY,
             turn_based        Integer,
-            length        Integer,
+            length        Integer
         )",
         (),
     )
@@ -426,7 +556,7 @@ fn establish_sql(conn: &Connection) {
         "CREATE TABLE if not exists rolls_changes(
             condition   TEXT,
             name    TEXT,
-            change_effect   Integer,
+            change_effect   Integer
         )",
         (),
     )
@@ -435,7 +565,7 @@ fn establish_sql(conn: &Connection) {
         "CREATE TABLE if not exists ability_scores_changes(
             condition TEXT,
             name TEXT,
-            change_effect   Integer,
+            change_effect   Integer
         )",
         (),
     )
@@ -444,8 +574,15 @@ fn establish_sql(conn: &Connection) {
         "CREATE TABLE if not exists character_info_changes(
             condition TEXT,
             name TEXT,
-            change_effect   Integer,
+            change_effect   Integer
         )",
+        (),
+    )
+    .unwrap();
+    conn.execute(
+        "CREATE TABLE if not exists action_types(
+        name TEXT PRIMARY KEY
+    )",
         (),
     )
     .unwrap();

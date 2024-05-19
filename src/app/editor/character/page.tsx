@@ -1,37 +1,51 @@
 "use client";
-import { SyntheticEvent } from "react";
+import { SyntheticEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ToastContainer, toast } from "react-toastify";
 import { checkRoll } from "@/app/helperFunctions";
 import { CharacterInfo } from "@/app/globalInterfaces";
 import "react-toastify/dist/ReactToastify.css";
+import EditorTitleAndFinish from "../editorTitleAndFinish";
 interface CharacterInfoProps {
   characterInfoList: CharacterInfo[];
 }
-export const Character: React.FC<CharacterInfoProps> = ({
+export const CharacterEditor: React.FC<CharacterInfoProps> = ({
   characterInfoList,
 }) => {
   const router = useRouter();
+  const [currentCharacterInfoList, setCurrentCharacterInfoList] = useState<
+    CharacterInfo[]
+  >([
+    { info_type: "name", input: "" },
+    { info_type: "hp", input: "" },
+    { info_type: "ac", input: "" },
+    { info_type: "mana", input: "" },
+  ]);
+  let nameInfo = currentCharacterInfoList[0]!;
+  let hpInfo = currentCharacterInfoList[1]!;
+  let acInfo = currentCharacterInfoList[2]!;
+  let manaInfo = currentCharacterInfoList[3]!;
   function sendErrorMessage(message: string) {
     toast.warning(message, {
       position: "bottom-center",
     });
   }
-  function finish(e: SyntheticEvent) {
-    e.preventDefault();
-    const target = e.target as typeof e.target & {
-      name: { value: string };
-      hp: { value: string };
-      ac: { value: string };
-      mana: { value: string };
-    };
-    characterInfoList = [
-      { info_type: "name", input: target.name.value.trim() },
-      { info_type: "hp", input: target.hp.value.trim() },
-      { info_type: "ac", input: target.ac.value.trim() },
-      { info_type: "mana", input: target.mana.value.trim() },
-    ];
+  function updateCurrentCharacterInfo(info_type: string, input: string) {
+    setCurrentCharacterInfoList((prev) => {
+      prev = prev.map((info) => {
+        if (info.info_type === info_type) {
+          return { info_type: info_type, input: input };
+        }
+        return info;
+      });
+      return prev;
+    });
+  }
+  function finish() {
+    characterInfoList = currentCharacterInfoList.map((currentInfo) => {
+      return { info_type: currentInfo.info_type, input: currentInfo.input };
+    });
     //checks
     for (let i = 0; i < characterInfoList.length; i++) {
       if (characterInfoList[i].input === "") {
@@ -72,20 +86,40 @@ export const Character: React.FC<CharacterInfoProps> = ({
         maxWidth: "100vw",
       }}
     >
-      <h1>Character Info</h1>
-      <form onSubmit={finish}>
-        <h2>Character Name</h2>
-        <input name="name"></input>
-        <h3>Health Points</h3>
-        <input name="hp"></input>
-        <h3>Armor Class</h3>
-        <input name="ac"></input>
-        <h3>Max Mana</h3>
-        <input name="mana"></input>
-        <button type="submit">Finish</button>
-      </form>
+      <EditorTitleAndFinish
+        title="Character Info Editor"
+        handleFinishButton={finish}
+      ></EditorTitleAndFinish>
+      <h2>Character Name</h2>
+      <input
+        value={nameInfo.input}
+        onChange={(eve) =>
+          updateCurrentCharacterInfo(nameInfo.info_type, eve.target.value)
+        }
+      ></input>
+      <h3>Health Points</h3>
+      <input
+        value={hpInfo.input}
+        onChange={(eve) =>
+          updateCurrentCharacterInfo(hpInfo.info_type, eve.target.value)
+        }
+      ></input>
+      <h3>Armor Class</h3>
+      <input
+        value={acInfo.input}
+        onChange={(eve) =>
+          updateCurrentCharacterInfo(acInfo.info_type, eve.target.value)
+        }
+      ></input>
+      <h3>Max Mana</h3>
+      <input
+        value={manaInfo.input}
+        onChange={(eve) =>
+          updateCurrentCharacterInfo(manaInfo.info_type, eve.target.value)
+        }
+      ></input>
       <ToastContainer />
     </div>
   );
 };
-export default Character;
+export default CharacterEditor;

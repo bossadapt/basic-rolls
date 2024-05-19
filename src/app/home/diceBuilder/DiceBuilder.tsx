@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
-import { checkRoll } from "../helperFunctions";
-import { Roll, AbilityScore } from "../globalInterfaces";
-import "./home.css";
+import { checkRoll } from "../../helperFunctions";
+import { Roll, AbilityScore } from "../../globalInterfaces";
+import "../home.css";
+import "./diceBuilder.css";
 import "react-toastify/dist/ReactToastify.css";
 interface HistoryRoll {
   id: number;

@@ -2,27 +2,44 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
-import { Roll, AbilityScore, CharacterInfo } from "../globalInterfaces";
+import {
+  Roll,
+  AbilityScore,
+  CharacterInfo,
+  Condition,
+  ListsResult,
+} from "../globalInterfaces";
 export const Editor: React.FC = () => {
   const [view, setView] = useState(<div className="loader"></div>);
   const router = useRouter();
   useEffect(() => {
-    invoke<[Roll[], AbilityScore[], CharacterInfo[]]>("get_lists", {})
+    invoke<ListsResult>("get_lists", {})
       .then((result) => {
-        const [rolls, abilityScores, characterInfoList] = result;
-        if (characterInfoList.length == 0) {
+        console.log("result:", result);
+        console.log("charinfo:", result.characterInfo);
+        console.log("abilityScore:", result.abilityScores);
+        console.log("rolls:", result.rolls);
+        console.log("conditions:", result.conditions);
+        console.log("actionTypes:", result.actionTypes);
+
+        if (result.characterInfo.length === 0) {
           console.log("character info not there redirecting");
-          router.push("/editor/characterInfo");
-        } else if (abilityScores.length != 6) {
+          router.push("/editor/character");
+        } else if (result.actionTypes.length === 0) {
+          console.log("actionTypes not there redirecting");
+          router.push("/editor/actionTypes");
+        } else if (result.abilityScores.length != 6) {
           console.log("ability scores not there redirecting");
           router.push("/editor/abilityScores");
-        } else if (rolls.length == 0) {
+        } else if (result.conditions.length === 0) {
+          console.log("conditions not there redirecting");
+          router.push("/editor/conditions");
+        } else if (result.rolls.length === 0) {
           console.log("rolls not there redirecting");
           router.push("/editor/rolls");
         } else {
           console.log("prerequisites fufilled entering main screen");
-          router.push("/editor/conditions");
-          //router.push("../home");
+          router.push("../home");
         }
         console.log("finished grab");
       })

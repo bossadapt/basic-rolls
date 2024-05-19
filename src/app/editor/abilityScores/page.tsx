@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
 import { AbilityScore } from "@/app/globalInterfaces";
 import "./editor.css";
+import EditorTitleAndFinish from "../editorTitleAndFinish";
 interface EditAbilityScoreProps {
   abilityScores: AbilityScore[];
 }
@@ -77,9 +78,10 @@ export const EditAbilityScore: React.FC = () => {
   }
   return (
     <div>
-      <h1 style={{ marginTop: "5%", marginBottom: "5%" }}>
-        Ability Score Editor
-      </h1>
+      <EditorTitleAndFinish
+        title="Ability Score Editor"
+        handleFinishButton={finalizeScores}
+      ></EditorTitleAndFinish>
       <hr style={{ marginBottom: "5%" }}></hr>
       <div className="horiz">
         <h3 className="scoreText">Strength</h3>
@@ -123,18 +125,6 @@ export const EditAbilityScore: React.FC = () => {
           onChange={(e) => setCharism(parseInt(e.target.value) || 0)}
         />
       </div>
-      <button
-        style={{
-          width: "50%",
-          marginLeft: "25%",
-          fontWeight: "bold",
-        }}
-        className="buttonCenter"
-        disabled={submitDisabled}
-        onClick={() => finalizeScores()}
-      >
-        Finish
-      </button>
     </div>
   );
 };

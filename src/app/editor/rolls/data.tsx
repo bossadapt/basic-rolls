@@ -1,6 +1,8 @@
 import { Roll } from "@/app/globalInterfaces";
+
 export let defaultRolls: Roll[] = [
   {
+    id: "0",
     name: "Initiative",
     roll: "d20 + var(dex)",
     healthCost: "0",
@@ -9,6 +11,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "1",
     name: "Acrobatics",
     roll: "d20 + var(dex)",
     healthCost: "0",
@@ -17,6 +20,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "2",
     name: "Animal_Handling",
     roll: "d20 +var(wis)",
     healthCost: "0",
@@ -25,6 +29,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "3",
     name: "Arcana",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -33,6 +38,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "4",
     name: "Athletics",
     roll: "d20 + var(str)",
     healthCost: "0",
@@ -41,6 +47,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "5",
     name: "Deception",
     roll: "d20 + var(cha)",
     healthCost: "0",
@@ -49,6 +56,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "6",
     name: "History",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -57,6 +65,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "7",
     name: "Insight",
     roll: "d20 + var(wis)",
     healthCost: "0",
@@ -65,6 +74,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "8",
     name: "Intimidation",
     roll: "d20 + var(cha)",
     healthCost: "0",
@@ -73,6 +83,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "9",
     name: "Investigation",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -81,6 +92,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "10",
     name: "Medicine",
     roll: "d20 + var(wis)",
     healthCost: "0",
@@ -89,6 +101,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "11",
     name: "Nature",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -97,6 +110,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "12",
     name: "Perception",
     roll: "d20 + var(wis)",
     healthCost: "0",
@@ -105,6 +119,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "13",
     name: "Performance",
     roll: "d20 + var(cha)",
     healthCost: "0",
@@ -113,6 +128,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "14",
     name: "Persuasion",
     roll: "d20 + var(cha)",
     healthCost: "0",
@@ -121,6 +137,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "15",
     name: "Religion",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -129,6 +146,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "16",
     name: "Slight_of_Hand",
     roll: "d20 + var(dex)",
     healthCost: "0",
@@ -137,6 +155,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "17",
     name: "Stealth",
     roll: "d20 + var(dex)",
     healthCost: "0",
@@ -145,6 +164,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "18",
     name: "Survival",
     roll: "d20 + var(wis)",
     healthCost: "0",
@@ -153,6 +173,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "19",
     name: "Strength_Save",
     roll: "d20 + var(str)",
     healthCost: "0",
@@ -161,6 +182,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "20",
     name: "Dexterity_Save",
     roll: "d20 + var(dex)",
     healthCost: "0",
@@ -169,6 +191,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "21",
     name: "Constitution_Save",
     roll: "d20 + var(con)",
     healthCost: "0",
@@ -177,6 +200,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "22",
     name: "Intelligence_Save",
     roll: "d20 + var(int)",
     healthCost: "0",
@@ -185,6 +209,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "23",
     name: "Wisdom_Save",
     roll: "d20 + var(wis)",
     healthCost: "0",
@@ -193,6 +218,7 @@ export let defaultRolls: Roll[] = [
     conditions: [],
   },
   {
+    id: "24",
     name: "Charisma_Save",
     roll: "d20 + var(cha)",
     healthCost: "0",

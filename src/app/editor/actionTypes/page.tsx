@@ -2,48 +2,58 @@
 import { useEffect, useState } from "react";
 import "./action.css";
 import "@/app/globals.css";
-import { TimeSpan } from "@/app/globalInterfaces";
-import { ActionType, ActionLimit } from "@/app/globalInterfaces";
-import { nameValidation } from "@/app/helperFunctions";
+import {
+  ActionType,
+  ActionLimit,
+  ActionTypeLimit,
+  ActionTypeLimitString,
+} from "@/app/globalInterfaces";
+import { generateID, nameValidation } from "@/app/helperFunctions";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
 import { invoke } from "@tauri-apps/api";
 import { useRouter } from "next/navigation";
 export const ActionTypeEditor: React.FC = () => {
-  const [nameInput, setNameInput] = useState("");
+  const router = useRouter();
   const [toolTip, setToolTip] = useState(
     "An action type will be used to attach to rolls to either limit their use and/or attach modifiers to them during conditions. Click to edit(it will overwrite stuff currently in fields)"
   );
-  const [toolTipColor, setToolTipColor] = useState("grey");
-  const [actionTypeNameSearch, setActionTypeNameSearch] = useState("");
-  const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
-  const router = useRouter();
-  let initialList: ActionLimit[] = [
+  let initialLimit: ActionLimit[] = [
     {
-      time: TimeSpan.Turn,
+      time: ActionTypeLimit.Turn,
       active: false,
       useCount: 1,
       timeCount: 1,
     },
     {
-      time: TimeSpan.Combat,
+      time: ActionTypeLimit.Combat,
       active: false,
       useCount: 1,
       timeCount: 1,
     },
     {
-      time: TimeSpan.ShortRest,
+      time: ActionTypeLimit.ShortRest,
       active: false,
       useCount: 1,
       timeCount: 1,
     },
     {
-      time: TimeSpan.LongRest,
+      time: ActionTypeLimit.LongRest,
       active: false,
       useCount: 1,
       timeCount: 1,
     },
   ];
-  let [limitList, setLimitList] = useState(initialList);
+  let defaultActionType: ActionType = {
+    id: "",
+    name: "",
+    limits: initialLimit,
+  };
+  const [toolTipColor, setToolTipColor] = useState("grey");
+  const [actionTypeNameSearch, setActionTypeNameSearch] = useState("");
+  const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
+  const [focusedActionType, setFocusedActionType] = useState(defaultActionType);
+  let finalizeCurrentButtonTitle =
+    focusedActionType.id === "" ? "Add" : "Update";
   useEffect(() => {
     invoke<ActionType[]>("grab_action_types", {})
       .then((result) => {
@@ -51,69 +61,91 @@ export const ActionTypeEditor: React.FC = () => {
       })
       .catch(console.error);
   }, []);
-  function handleActionTypeAdd() {
-    let nameTest = nameValidation(nameInput);
+  function actionTypeAddHandler(currentActionType: ActionType) {
+    let nameTest = nameValidation(currentActionType.name);
     if (!nameTest.result) {
       setToolTipColor("red");
       setToolTip("Failed to Add: " + nameTest.desc);
       return;
     }
+    //checks (exluding itself) if the name exists already
     if (
-      actionTypes.some((actionType) => {
-        return actionType.name == nameInput;
-      })
+      actionTypes
+        .filter((actionType) => {
+          return actionType.id != currentActionType.id;
+        })
+        .some((actionType) => {
+          return actionType.name == currentActionType.name;
+        })
     ) {
       setToolTipColor("red");
       setToolTip("Failed to Add: name already exists in action type");
       return;
     }
     setActionTypes((oldTypes) => {
-      let tempAction = {
-        name: nameInput,
-        limits: limitList,
-      };
-      if (
-        !oldTypes.some((actionType) => {
-          return actionType.name === nameInput;
-        })
-      ) {
-        console.log(tempAction, oldTypes);
-        oldTypes.push(tempAction);
+      if (currentActionType.id === "") {
+        //adding
+        console.log("adding");
+        currentActionType.id = generateID(oldTypes);
+        oldTypes.push(currentActionType);
+      } else {
+        //updating
+        console.log("updating");
+        let indexFound = oldTypes.findIndex((type) => {
+          return type.id === currentActionType.id;
+        });
+        //dont cause a rerender if nothing changed// causes endless rerender if removed
+        if (oldTypes[indexFound] === currentActionType || indexFound === -1) {
+          console.log("no changes");
+          return oldTypes;
+        }
+        console.log("id:" + currentActionType.id);
+        console.log("indexFound:" + indexFound);
+        oldTypes[indexFound] = currentActionType;
       }
-      return oldTypes;
+      console.log("completed action type");
+      return { ...oldTypes };
     });
+    console.log(actionTypes);
     setToolTipColor("green");
-    setToolTip('Added "' + nameInput + '"');
-    setNameInput("");
-    setLimitList(initialList);
+    setToolTip('Added "' + currentActionType.name + '"');
+    setFocusedActionType(defaultActionType);
   }
-  function handleUseCountChange(timeFocused: TimeSpan, newNumber: number) {
+  function useCountChangeHandler(
+    timeFocused: ActionTypeLimit,
+    newNumber: number
+  ) {
     if (newNumber > 0) {
-      setLimitList((prev) => {
-        let newLimitList = prev.map((limit) => {
+      setFocusedActionType((prev) => {
+        let newLimitList = prev.limits.map((limit) => {
           if (limit.time == timeFocused) {
             limit.useCount = newNumber;
           }
           return limit;
         });
-        return newLimitList;
+        prev.limits = newLimitList;
+        return { ...prev };
       });
     }
   }
-  function handleTimeCountChange(timeFocused: TimeSpan, newNumber: number) {
+  function timeCountChangeHandler(
+    timeFocused: ActionTypeLimit,
+    newNumber: number
+  ) {
     if (newNumber > 0) {
-      setLimitList((prev) => {
-        let newLimitList = prev.map((limit) => {
+      setFocusedActionType((prev) => {
+        let newLimitList = prev.limits.map((limit) => {
           if (limit.time == timeFocused) {
             limit.timeCount = newNumber;
           }
           return limit;
         });
-        return newLimitList;
+        prev.limits = newLimitList;
+        return { ...prev };
       });
     }
   }
-  function handleFinishButton() {
+  function finishButtonHandler() {
     console.log(actionTypes);
     invoke("overwrite_action_types", { newActionTypes: actionTypes })
       .then((result) => {
@@ -132,23 +164,36 @@ export const ActionTypeEditor: React.FC = () => {
     setToolTip('Removed "' + targetActionType.name + '"');
   }
   function handleEditButton(targetActionType: ActionType) {
-    setNameInput(targetActionType.name);
-    setLimitList(targetActionType.limits);
-    handleDeleteButton(targetActionType);
+    setFocusedActionType({
+      id: targetActionType.id,
+      name: targetActionType.name,
+      limits: targetActionType.limits.map((lim) => {
+        return { ...lim };
+      }),
+    });
+    //remove deletion and make it more aware along with add
     setToolTipColor("yellow");
     setToolTip('Editing "' + targetActionType.name + '"');
   }
-  function checkBoxClickHandler(timeEnabled: TimeSpan, checked: boolean) {
-    setLimitList((prev) => {
-      console.log(prev);
-      let newLimitList = prev.map((limit) => {
+  function nameChangeHandler(newName: string) {
+    setFocusedActionType((prev) => {
+      prev.name = newName;
+      return { ...prev };
+    });
+  }
+  function checkBoxClickHandler(
+    timeEnabled: ActionTypeLimit,
+    checked: boolean
+  ) {
+    setFocusedActionType((prev) => {
+      let newLimitList = prev.limits.map((limit) => {
         if (limit.time == timeEnabled) {
           limit.active = checked;
         }
         return limit;
       });
-      console.log(newLimitList);
-      return newLimitList;
+      prev.limits = newLimitList;
+      return { ...prev };
     });
   }
   function timeRatioBuilder(limit: ActionLimit): string {
@@ -171,7 +216,7 @@ export const ActionTypeEditor: React.FC = () => {
       >
         <EditorTitleAndFinish
           title="Ability Type Editor"
-          handleFinishButton={handleFinishButton}
+          handleFinishButton={finishButtonHandler}
         ></EditorTitleAndFinish>
       </div>
       <div className="column">
@@ -180,8 +225,8 @@ export const ActionTypeEditor: React.FC = () => {
           <input
             placeholder="Name Of Action Type"
             style={{ marginLeft: "auto", marginRight: "auto" }}
-            value={nameInput}
-            onChange={(eve) => setNameInput(eve.target.value)}
+            value={focusedActionType.name}
+            onChange={(eve) => nameChangeHandler(eve.target.value)}
           ></input>
         </div>
         <table className="editorTable">
@@ -203,7 +248,7 @@ export const ActionTypeEditor: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {limitList.map((en) => {
+            {focusedActionType.limits.map((en) => {
               return (
                 <tr key={en.time}>
                   <td
@@ -225,7 +270,7 @@ export const ActionTypeEditor: React.FC = () => {
                       className="listInput"
                       value={en.useCount}
                       onChange={(eve) =>
-                        handleUseCountChange(en.time, Number(eve.target.value))
+                        useCountChangeHandler(en.time, Number(eve.target.value))
                       }
                     ></input>
                   </td>
@@ -237,21 +282,24 @@ export const ActionTypeEditor: React.FC = () => {
                       className="listInput"
                       value={en.timeCount}
                       onChange={(eve) =>
-                        handleTimeCountChange(en.time, Number(eve.target.value))
+                        timeCountChangeHandler(
+                          en.time,
+                          Number(eve.target.value)
+                        )
                       }
                     ></input>
                   </td>
-                  <td className="editorTd">{en.time}</td>
+                  <td className="editorTd">{ActionTypeLimitString[en.time]}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
         <button
-          onClick={handleActionTypeAdd}
+          onClick={() => actionTypeAddHandler({ ...focusedActionType })}
           style={{ width: "60%", lineHeight: "50px", fontSize: "20px" }}
         >
-          Add Action Type To List
+          {finalizeCurrentButtonTitle} Action Type
         </button>
         <table className="displayTable">
           <thead>
@@ -279,7 +327,7 @@ export const ActionTypeEditor: React.FC = () => {
               })
               .map((actionType) => {
                 return (
-                  <tr key={actionType.name}>
+                  <tr key={actionType.id}>
                     <th onClick={() => handleEditButton(actionType)}>
                       {actionType.name}
                     </th>

@@ -1,39 +1,55 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use std::fmt::format;
-
-use calamine::{open_workbook, Data, RangeDeserializerBuilder, Reader, Xlsx};
-use rfd::AsyncFileDialog;
-use rusqlite::{Connection, ToSql};
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use tauri::{api::file, http::Request};
 //these need to be this capitalization to be properly turned in tsx object
-
 #[derive(Serialize, Deserialize)]
 struct ActionType {
+    id: String,
     name: String,
     limits: Vec<ActionLimit>,
 }
 #[derive(Serialize, Deserialize)]
 struct ActionLimit {
-    time: String,
+    time: i8,
     active: bool,
-    useCount: i32,
-    timeCount: i32,
+    #[serde(rename = "useCount")]
+    use_count: i32,
+    #[serde(rename = "timeCount")]
+    time_count: i32,
 }
 
 #[derive(Serialize, Deserialize)]
 struct GetListsResult {
     rolls: Vec<Roll>,
-    abilityScores: Vec<AbilityScore>,
-    characterInfo: Vec<CharacterInfo>,
+    #[serde(rename = "abilityScores")]
+    ability_scores: Vec<AbilityScore>,
+    #[serde(rename = "characterInfo")]
+    character_info: Vec<CharacterInfo>,
     conditions: Vec<Condition>,
-    actionTypes: Vec<ActionType>,
+    #[serde(rename = "actionTypes")]
+    action_types: Vec<ActionType>,
 }
+
+// name: string;
+// roll: string;
+// healthCost: string;
+// manaCost: string;
+// actionTypes: ActionType[];
+// conditions: Condition[];
+
 #[derive(Serialize, Deserialize)]
 struct Roll {
-    roll_name: String,
-    default_roll: String,
+    id: String,
+    name: String,
+    roll: String,
+    #[serde(rename = "healthCost")]
+    health_cost: String,
+    #[serde(rename = "manaCost")]
+    mana_cost: String,
+    #[serde(rename = "actionTypes")]
+    action_types: Vec<String>,
+    conditions: Vec<String>,
 }
 #[derive(Serialize, Deserialize)]
 struct CharacterInfo {
@@ -54,83 +70,25 @@ struct DatabaseChange {
 #[derive(Serialize, Deserialize)]
 struct Change {
     name: String,
+    #[serde(rename = "changeEffect")]
     change_effect: String,
 }
 //left to understand what needs to put
-struct DatabaseCondition {
-    name: String,
-    turn_based: bool,
-    length: i64,
-}
 #[derive(Serialize, Deserialize)]
 struct Condition {
+    id: String,
     name: String,
+    #[serde(rename = "turnBased")]
     turn_based: bool,
-    length: i64,
+    length: String,
+    #[serde(rename = "rollChanges")]
     rolls_changes: Vec<Change>,
+    #[serde(rename = "abilityScoreChanges")]
     ability_scores_changes: Vec<Change>,
+    #[serde(rename = "characterInfoChanges")]
     character_info_changes: Vec<Change>,
 }
 
-fn string_to_xy(input: &str) -> (u32, u32) {
-    // a123 // 1
-    let mut x: u32 = 0;
-    let mut char_count: usize = 0;
-    for cha in input.chars() {
-        let current_ascii = cha.to_ascii_lowercase() as u8;
-        if current_ascii > 140 && current_ascii < 173 {
-            char_count += 1;
-            x += (current_ascii - 141) as u32;
-        } else {
-            break;
-        }
-    }
-    // a123 // 123
-    let y = input[char_count..input.len()].parse::<u32>().unwrap();
-    (x, y)
-}
-//-> Result<Vec<String>, ()>
-#[tauri::command]
-async fn get_data_from_excel(file_path: &str, requested_cells: &str) -> Result<Vec<String>, ()> {
-    //possible requested cells
-    // a0 / a1-b3
-    //todo need to know sheet name
-    println!("ran with file:{} request:{}", file_path, requested_cells);
-    let mut workbook: Xlsx<_> = open_workbook(file_path).unwrap();
-    let cell_total: Vec<String> = Vec::new();
-    if requested_cells.contains("-") {
-        let requests: Vec<&str> = requested_cells.split("-").collect();
-        let (x1, y1) = string_to_xy(requests[0]);
-        let (x2, y2) = string_to_xy(requests[1]);
-
-        string_to_xy(requested_cells);
-        let sheet = workbook.worksheet_range("Sheet1").unwrap();
-        let range_in_sheet = sheet.range((x1, y1), (x2, y2));
-        let cells = range_in_sheet.cells();
-        let mut cell_total: Vec<String> = Vec::new();
-        for cell in cells {
-            println!("Cell 0:{},Cell 1:{},Cell 2:{}", cell.0, cell.1, cell.2);
-            cell_total.push(cell.2.to_string());
-        }
-    } else {
-        let mut x1: u32;
-        let mut y1: u32;
-        let range = workbook.worksheet_range("Sheet1").unwrap();
-    }
-    return Ok(cell_total);
-}
-#[tauri::command]
-async fn get_file_path_by_file_dialog() -> Result<String, ()> {
-    println!("file explore");
-    let file = AsyncFileDialog::new()
-        .add_filter("Excel", &["xls", "xlsx", "xlsm", "xlsb", "xla", "xlam"])
-        .add_filter("openDoc", &["ods"])
-        .set_directory("/")
-        .pick_file()
-        .await;
-
-    return Ok(file.unwrap().path().to_str().unwrap().to_owned());
-}
 #[tauri::command]
 fn overwrite_character_info(character_info_list: Vec<CharacterInfo>) -> Result<(), ()> {
     println!("Overwrite character info started");
@@ -172,63 +130,61 @@ fn overwrite_rolls(new_rolls: Vec<Roll>) -> Result<(), ()> {
     //delete all old ones
     conn.execute("DELETE FROM rolls", ())
         .expect("Failed to delete");
+    conn.execute("DELETE FROM rollsActionTypes", ())
+        .expect("Failed to delete");
+    conn.execute("DELETE FROM rollsConditions", ())
+        .expect("Failed to delete");
     for roll in new_rolls {
         conn.execute(
-            "INSERT INTO rolls(rollName,defaultRoll) VALUES((?1),(?2))",
-            (roll.roll_name, roll.default_roll),
+            "INSERT INTO rolls(id,name,roll,healthCost,manaCost) VALUES((?1),(?2),(?3),(?4),(?5))",
+            (
+                roll.id.to_owned(),
+                roll.name,
+                roll.roll,
+                roll.health_cost,
+                roll.mana_cost,
+            ),
         )
         .expect("failed to add");
+        for action_type in roll.action_types {
+            conn.execute(
+                "INSERT INTO rollsActionTypes(rollID,actionType) VALUES((?1),(?2))",
+                (roll.id.to_owned(), action_type),
+            )
+            .expect("failed to add");
+        }
+
+        for condition in roll.conditions {
+            conn.execute(
+                "INSERT INTO rollsConditions(rollID,condition) VALUES((?1),(?2))",
+                (roll.id.to_owned(), condition),
+            )
+            .expect("failed to add");
+        }
     }
     println!("Overwrite rolls finished");
     Ok(())
 }
-
 #[tauri::command]
 fn overwrite_action_types(new_action_types: Vec<ActionType>) -> Result<(), ()> {
     println!("Started overwriteing action types");
     let conn = Connection::open("userPage").unwrap();
-    //get all ability types to hunt down the temp tables
-    let names: Vec<String> = grab_action_types_names().unwrap();
-    //delete all actionTypeLists
-    for name in names {
-        let query = format!("DROP TABLE IF EXISTS AT_{}", name);
-        conn.execute(query.as_str(), []).expect("Failed to delete");
-    }
-    conn.execute("DELETE FROM action_types", ())
-        .expect("Failed to delete");
-    //adding new lists
-    for action_type in new_action_types {
-        let table_name = format!("AT_{}", action_type.name);
-        //adding to the main action types
-        let _ = conn.execute(
-            "INSERT INTO action_types(name) VALUES((?1))",
-            [action_type.name],
-        );
-        //creating a temp branch table to hold the limits
-
-        let req = format!(
-            "CREATE TABLE if not exists {}(
-            time TEXT PRIMARY KEY,
-            active Integer,
-            useCount Integer,
-            timeCount Integer
-        )",
-            table_name.to_owned()
-        );
-        conn.execute(&req, ()).unwrap();
-        //fill the limits with each of the four
-        for limit in action_type.limits {
-            //convert to i128 for lossless false > 0
-            let req = format!(
-                "INSERT INTO {}(time,active,useCount,timeCount) VALUES('({})',({}),({}),({}))",
-                table_name.to_owned(),
+    conn.execute("DROP TABLE IF EXISTS action_types", [])
+        .unwrap();
+    conn.execute(
+        "CREATE TABLE if not exists action_types(id TEXT,name TEXT,time INTEGER,active INTEGER,useCount INTEGER,timeCount INTEGER)",
+        [],
+    ).unwrap();
+    for action in new_action_types {
+        for limit in action.limits {
+            conn.execute("INSERT INTO action_types(id, name, time,active,useCount,timeCount) VALUES((?1),(?2),(?3),(?4),(?5),(?6))", (
+                action.id.to_owned(),
+                action.name.to_owned(),
                 limit.time,
-                limit.active as i32,
-                limit.useCount.to_string(),
-                limit.timeCount.to_string(),
-            );
-            let test2 = conn.execute(req.as_str(), ()).unwrap();
-            print!("TABLE IS {}", test2);
+                limit.active,
+                limit.use_count,
+                limit.time_count,
+            )).unwrap();
         }
     }
     println!("Finished overwriteing action types");
@@ -250,15 +206,11 @@ fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
 
     //adding new ones
     for condition in new_conditions {
-        // conditions.push(DatabaseCondition {
-        //     name: condition.name,
-        //     turn_based: condition.turn_based,
-        //     length: condition.length,
-        // });
         conn.execute(
-            "INSERT INTO conditions(name,turn_based,length) VALUES((?1),(?2),(?3))",
+            "INSERT INTO conditions(id, name,turn_based,length) VALUES((?1),(?2),(?3),(?4))",
             (
-                condition.name.to_owned(),
+                condition.id.to_owned(),
+                condition.name,
                 condition.turn_based,
                 condition.length,
             ),
@@ -267,7 +219,7 @@ fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
         for ability_change in condition.ability_scores_changes {
             conn.execute(
                 "INSERT INTO ability_scores_changes(condition,name,change_effect) VALUES((?1),(?2),(?3))",
-                (condition.name.to_owned(),ability_change.name,ability_change.change_effect),
+                (condition.id.to_owned(),ability_change.name,ability_change.change_effect),
             )
             .expect("failed to add ability_scores_changes");
         }
@@ -275,7 +227,7 @@ fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
             conn.execute(
                 "INSERT INTO rolls_changes(condition,name,change_effect) VALUES((?1),(?2),(?3))",
                 (
-                    condition.name.to_owned(),
+                    condition.id.to_owned(),
                     roll_change.name,
                     roll_change.change_effect,
                 ),
@@ -285,7 +237,7 @@ fn overwrite_conditions(new_conditions: Vec<Condition>) -> Result<(), ()> {
         for character_change in condition.character_info_changes {
             conn.execute(
                 "INSERT INTO character_info_changes(condition,name,change_effect) VALUES((?1),(?2),(?3))",
-                (condition.name.to_owned(),character_change.name,character_change.change_effect),
+                (condition.id.to_owned(),character_change.name,character_change.change_effect),
             )
             .expect("failed to add character_info_changes");
         }
@@ -311,18 +263,18 @@ fn grab_ability_scores() -> Result<Vec<AbilityScore>, ()> {
     println!("grab ability ended");
     Ok(ability_scores)
 }
-#[tauri::command]
-fn grab_action_types_names() -> Result<Vec<String>, ()> {
-    let conn = Connection::open("userPage").unwrap();
-    let query = "SELECT * FROM action_types";
-    let mut stmt = conn.prepare(&query).unwrap();
-    let mut rows = stmt.query([]).unwrap();
-    let mut action_types_names: Vec<String> = Vec::new();
-    while let Some(row) = rows.next().unwrap() {
-        action_types_names.push(row.get(0).unwrap());
-    }
-    println!("grab ability ended");
-    Ok(action_types_names)
+// export interface Roll {
+//     id: string;
+//     name: string;
+//     roll: string;
+//     healthCost: string;
+//     manaCost: string;
+//     actionTypes: ActionType[];
+//     conditions: Condition[];
+//   }
+struct IdStringArray {
+    id: String,
+    arr: Vec<String>,
 }
 #[tauri::command]
 fn grab_rolls() -> Result<Vec<Roll>, ()> {
@@ -334,9 +286,75 @@ fn grab_rolls() -> Result<Vec<Roll>, ()> {
     let mut rolls: Vec<Roll> = Vec::new();
     while let Some(row) = rows.next().unwrap() {
         rolls.push(Roll {
-            roll_name: row.get(0).unwrap(),
-            default_roll: row.get(1).unwrap(),
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            roll: row.get(2).unwrap(),
+            health_cost: row.get(3).unwrap(),
+            mana_cost: row.get(4).unwrap(),
+            action_types: Vec::new(),
+            conditions: Vec::new(),
         });
+    }
+    let query = "SELECT * FROM rollsActionTypes";
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut action_type_lists: Vec<IdStringArray> = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        let current_id: String = row.get(0).unwrap();
+        let current_action_type: String = row.get(1).unwrap();
+        let current_action_type_length = action_type_lists.len();
+        if current_action_type_length > 0
+            && action_type_lists[current_action_type_length - 1].id == current_id
+        {
+            action_type_lists[current_action_type_length - 1]
+                .arr
+                .push(current_action_type);
+        } else {
+            action_type_lists.push(IdStringArray {
+                id: current_id,
+                arr: vec![current_action_type],
+            })
+        }
+    }
+    let query = "SELECT * FROM rollsConditions";
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut condition_list: Vec<IdStringArray> = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        let current_id: String = row.get(0).unwrap();
+        let current_condition: String = row.get(1).unwrap();
+        let condition_list_length = action_type_lists.len();
+        if condition_list_length > 0 && condition_list[condition_list_length - 1].id == current_id {
+            condition_list[condition_list_length - 1]
+                .arr
+                .push(current_condition);
+        } else {
+            condition_list.push(IdStringArray {
+                id: current_id,
+                arr: vec![current_condition],
+            })
+        }
+    }
+    //double pointers following both lists to combine
+    // combining during pulling would be more efficient but this adds some readability and room to grow (mainly I already wrote it)
+    //wrote the cleaner version for grab_action_types, ill come back maybe to fix
+    let mut ability_types_index = 0;
+    let mut roll_index = 0;
+    while ability_types_index < action_type_lists.len() {
+        while action_type_lists[ability_types_index].id != rolls[roll_index].id {
+            roll_index += 1;
+        }
+        rolls[roll_index].action_types = action_type_lists[ability_types_index].arr.clone();
+        ability_types_index += 1;
+    }
+    let mut condition_index = 0;
+    let mut roll_index = 0;
+    while condition_index < condition_list.len() {
+        while condition_list[condition_index].id != rolls[roll_index].id {
+            roll_index += 1;
+        }
+        rolls[roll_index].action_types = condition_list[condition_index].arr.clone();
+        condition_index += 1;
     }
     println!("grab rolls ended");
     Ok(rolls)
@@ -368,9 +386,10 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
     let mut condition_list: Vec<Condition> = Vec::new();
     while let Some(row) = rows.next().unwrap() {
         condition_list.push(Condition {
-            name: row.get(0).unwrap(),
-            turn_based: row.get(1).unwrap(),
-            length: row.get(2).unwrap(),
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            turn_based: row.get(2).unwrap(),
+            length: row.get(3).unwrap(),
             rolls_changes: Vec::new(),
             ability_scores_changes: Vec::new(),
             character_info_changes: Vec::new(),
@@ -417,7 +436,7 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
         //rolls
         for i in 0..rolls_changes.len() {
             let roll = rolls_changes[i].clone();
-            if rolls_changes[i].condition == condition.name {
+            if rolls_changes[i].condition == condition.id {
                 condition.rolls_changes.push(Change {
                     name: roll.name,
                     change_effect: roll.change_effect,
@@ -427,7 +446,7 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
         //ability scores
         for i in 0..ability_scores_changes.len() {
             let score = ability_scores_changes[i].clone();
-            if score.condition == condition.name {
+            if score.condition == condition.id {
                 condition.ability_scores_changes.push(Change {
                     name: score.name,
                     change_effect: score.change_effect,
@@ -437,7 +456,7 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
         //character info
         for i in 0..character_info_changes.len() {
             let character_info = character_info_changes[i].clone();
-            if character_info.condition == condition.name {
+            if character_info.condition == condition.id {
                 condition.character_info_changes.push(Change {
                     name: character_info.name,
                     change_effect: character_info.change_effect,
@@ -451,7 +470,7 @@ fn grab_conditions() -> Result<Vec<Condition>, ()> {
 
 //Vec<Condition>,
 #[tauri::command]
-fn get_lists() -> Result<GetListsResult, ()> {
+fn grab_lists() -> Result<GetListsResult, ()> {
     println!("Started getting Lists");
     let conn = Connection::open("userPage").unwrap();
     establish_sql(&conn); //if not already set up
@@ -463,42 +482,54 @@ fn get_lists() -> Result<GetListsResult, ()> {
     println!("finished getting Lists");
     return Ok(GetListsResult {
         rolls: rolls,
-        abilityScores: ability_scores,
-        characterInfo: character_info_list,
+        ability_scores: ability_scores,
+        character_info: character_info_list,
         conditions: conditions,
-        actionTypes: action_types,
+        action_types: action_types,
     });
 }
-
+//CREATE TABLE if not exists action_types(id Text, name TEXT,time INTEGER,active INTEGER,useCount INTEGER,timeCount INTEGER)
 #[tauri::command]
 fn grab_action_types() -> Result<Vec<ActionType>, ()> {
-    println!("Started grabing action types");
+    println!("grabing action types started");
     let conn = Connection::open("userPage").unwrap();
-    let names: Vec<String> = grab_action_types_names().unwrap();
     let mut action_types: Vec<ActionType> = Vec::new();
-    for name in names {
-        let query = format!("SELECT * FROM AT_{}", name);
-        let mut stmt = conn.prepare(&query).unwrap();
-        let mut rows = stmt.query([]).unwrap();
-        let mut limits: Vec<ActionLimit> = Vec::new();
-        while let Some(row) = rows.next().unwrap() {
-            limits.push(ActionLimit {
-                time: row.get(0).unwrap(),
-                active: row.get(1).unwrap(),
-                useCount: row.get(2).unwrap(),
-                timeCount: row.get(3).unwrap(),
+    let query = format!("SELECT * FROM action_types");
+    let mut stmt = conn.prepare(&query).unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    //id: 0 name:1
+    // limits.push(ActionLimit {
+    //     time: row.get(2).unwrap(),
+    //     active: row.get(3).unwrap(),
+    //     use_count: row.get(4).unwrap(),
+    //     time_count: row.get(5).unwrap(),
+    // });
+    while let Some(row) = rows.next().unwrap() {
+        let action_type_len = action_types.len();
+        let current_id: String = row.get(0).unwrap();
+        let current_limit: ActionLimit = ActionLimit {
+            time: row.get(2).unwrap(),
+            active: row.get(3).unwrap(),
+            use_count: row.get(4).unwrap(),
+            time_count: row.get(5).unwrap(),
+        };
+        if action_type_len > 0 && action_types[action_type_len - 1].id == current_id {
+            action_types[action_type_len - 1].limits.push(current_limit)
+        } else {
+            action_types.push(ActionType {
+                id: current_id,
+                name: row.get(1).unwrap(),
+                limits: vec![current_limit],
             });
         }
-        action_types.push(ActionType { name, limits });
     }
-
-    println!("Finished grabing action types");
+    println!("grabing action types ended");
     return Ok(action_types);
 }
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            get_lists,
+            grab_lists,
             overwrite_ability_scores,
             overwrite_character_info,
             overwrite_rolls,
@@ -509,18 +540,43 @@ fn main() {
             grab_rolls,
             grab_conditions,
             grab_action_types,
-            get_file_path_by_file_dialog,
-            get_data_from_excel
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+// export interface Roll {
+//     name: string;
+//     roll: string;
+//     healthCost: string;
+//     manaCost: string;
+//     actionTypes: ActionType[];
+//     conditions: Condition[];
+//   }
 fn establish_sql(conn: &Connection) {
     conn.execute(
         "CREATE TABLE if not exists rolls(
-            rollName TEXT PRIMARY KEY,
-            defaultRoll TEXT
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            roll TEXT,
+            healthCost TEXT,
+            manaCost TEXT
         )",
+        (),
+    )
+    .unwrap();
+    conn.execute(
+        "CREATE TABLE if not exists rollsActionTypes(
+        rollID TEXT,
+        actionType TEXT
+    )",
+        (),
+    )
+    .unwrap();
+    conn.execute(
+        "CREATE TABLE if not exists rollsConditions(
+        rollID TEXT PRIMARY KEY,
+        condition TEXT
+    )",
         (),
     )
     .unwrap();
@@ -545,9 +601,10 @@ fn establish_sql(conn: &Connection) {
     //condition
     conn.execute(
         "CREATE TABLE if not exists conditions(
-            name TEXT PRIMARY KEY,
+            id TEXT PRIMARY KEY,
+            name,
             turn_based        Integer,
-            length        Integer
+            length        TEXT
         )",
         (),
     )
@@ -580,9 +637,7 @@ fn establish_sql(conn: &Connection) {
     )
     .unwrap();
     conn.execute(
-        "CREATE TABLE if not exists action_types(
-        name TEXT PRIMARY KEY
-    )",
+        "CREATE TABLE if not exists action_types(id TEXT,name TEXT,time INTEGER,active INTEGER,useCount INTEGER,timeCount INTEGER)",
         (),
     )
     .unwrap();

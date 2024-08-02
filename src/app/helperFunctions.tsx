@@ -1,6 +1,32 @@
 import { Roll, importantCharCode } from "./globalInterfaces";
+import { v4 as uuid } from "uuid";
 const legitSymbols: String[] = ["+", "-", "*", "/"];
-const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
+const defaultVars: String[] = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+  "ac",
+  "mana",
+  "hp",
+  "name",
+];
+
+///generates a UUID and ensures no duplicates with existing data
+interface ObjectWithID {
+  id: string;
+}
+export function generateID(existingList: ObjectWithID[]) {
+  let newUUID = uuid();
+  while (existingList.some((item) => item.id === newUUID)) {
+    newUUID = uuid();
+  }
+  return newUUID;
+}
+
+//parses rolls while checking if the vars are valid
 export function checkRoll(
   rollString: string,
   currentRolls: Roll[]
@@ -18,7 +44,7 @@ export function checkRoll(
   // + || * || /
   //3
   //var(something)
-  let legitCharacters: String[] = ["d", "v"];
+  //let legitCharacters: String[] = ["d", "v"];
   //steps to converting:
   //initial                      d20+(3d20 * var(Dex)) -  3 +var(dex)/ 5
   //removing spaces and caps:    d20+(3d20*var(dex))-3+3/5

@@ -18,9 +18,9 @@ export const AbilityScoreEffectsTable: React.FC<AbilityScoreEffectsProps> = ({
   function updateItemChange(changeName: string, newChange: string) {
     setCondition((oldCondition) => {
       oldCondition!.abilityScoreChanges.find((change) => {
-        change.name == changeName;
+        return change.name == changeName;
       })!.changeEffect = newChange;
-      return oldCondition;
+      return { ...oldCondition };
     });
   }
   function refreshSelected() {
@@ -57,7 +57,7 @@ export const AbilityScoreEffectsTable: React.FC<AbilityScoreEffectsProps> = ({
       ) {
         let tempChange: Change = {
           name: selectedAbilityInfo,
-          changeEffect: "var(" + selectedAbilityInfo + ")",
+          changeEffect: "var(" + selectedAbilityInfo.substring(0, 3) + ")",
         };
         console.log(tempChange.name + " added");
         oldCondition!.abilityScoreChanges.push(tempChange);

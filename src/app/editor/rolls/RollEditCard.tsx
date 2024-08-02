@@ -1,15 +1,19 @@
 import "./rolls.css";
 import EditLogo from "../images/pencil.svg";
 import DeleteLogo from "../images/delete.svg";
-import { Roll } from "@/app/globalInterfaces";
+import { ActionType, Condition, Roll } from "@/app/globalInterfaces";
 import { useState } from "react";
 interface RollEditCardProps {
   currentRoll: Roll;
+  actionTypes: ActionType[];
+  conditions: Condition[];
   removeRoll: (removedName: string) => void;
   editRoll: (editName: string) => void;
 }
 export const RollEditCard: React.FC<RollEditCardProps> = ({
   currentRoll,
+  actionTypes,
+  conditions,
   removeRoll,
   editRoll,
 }) => {
@@ -93,10 +97,14 @@ export const RollEditCard: React.FC<RollEditCardProps> = ({
                     </thead>
                     <tbody>
                       <tr>
-                        {currentRoll.actionTypes.map((actionType) => {
+                        {currentRoll.actionTypes.map((actionID) => {
                           return (
                             <td style={{ textAlign: "center" }}>
-                              {actionType.name}
+                              {
+                                actionTypes.find((action) => {
+                                  return action.id == actionID;
+                                })!.name
+                              }
                             </td>
                           );
                         })}
@@ -111,10 +119,14 @@ export const RollEditCard: React.FC<RollEditCardProps> = ({
                     </thead>
                     <tbody>
                       <tr>
-                        {currentRoll.conditions.map((condition) => {
+                        {currentRoll.conditions.map((conditionID) => {
                           return (
                             <td style={{ textAlign: "center" }}>
-                              {condition.name}
+                              {
+                                conditions.find((condit) => {
+                                  return condit.id == conditionID;
+                                })!.name
+                              }
                             </td>
                           );
                         })}

@@ -8,25 +8,33 @@ export enum importantCharCode {
   underScore = 95, //_
 }
 export interface Roll {
+  id: string;
   name: string;
   roll: string;
   healthCost: string;
   manaCost: string;
-  actionTypes: ActionType[];
-  conditions: Condition[];
+  actionTypes: string[];
+  conditions: string[];
 }
-export enum TimeSpan {
-  Turn = "turn",
-  Combat = "combat",
-  ShortRest = "short rest",
-  LongRest = "long rest",
+export const ActionTypeLimitString = [
+  "Turn",
+  "Combat",
+  "Short Rest",
+  "Long Rest",
+];
+export enum ActionTypeLimit {
+  Turn,
+  Combat,
+  ShortRest,
+  LongRest,
 }
 export interface ActionType {
+  id: string;
   name: string;
   limits: ActionLimit[];
 }
 export interface ActionLimit {
-  time: TimeSpan;
+  time: ActionTypeLimit;
   active: boolean;
   useCount: number;
   timeCount: number;
@@ -47,6 +55,7 @@ export interface Change {
   changeEffect: string;
 }
 export interface Condition {
+  id: string;
   name: string;
   turnBased: boolean;
   length: string;

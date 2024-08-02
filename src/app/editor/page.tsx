@@ -2,18 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
-import {
-  Roll,
-  AbilityScore,
-  CharacterInfo,
-  Condition,
-  ListsResult,
-} from "../globalInterfaces";
+import { ListsResult } from "../globalInterfaces";
 export const Editor: React.FC = () => {
   const [view, setView] = useState(<div className="loader"></div>);
   const router = useRouter();
   useEffect(() => {
-    invoke<ListsResult>("get_lists", {})
+    invoke<ListsResult>("grab_lists", {})
       .then((result) => {
         console.log("result:", result);
         console.log("charinfo:", result.characterInfo);

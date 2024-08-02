@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { CharacterEffectTable } from "./CharacterEffectTable";
 import { AbilityScoreEffectsTable } from "./AbilityScoreEffectTable";
+import { useRouter } from "next/navigation";
 import "./conditions.css";
 import {
   Roll,
@@ -11,14 +12,18 @@ import {
   ListsResult,
 } from "@/app/globalInterfaces";
 import { invoke } from "@tauri-apps/api";
+import RollsEffectsTable from "./RollsEffectTable";
+import EditorTitleAndFinish from "../editorTitleAndFinish";
+import { checkRoll, generateID, nameValidation } from "@/app/helperFunctions";
 interface ConditionProps {
   listsProp: ListsResult;
 }
 export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
   const defaultCondition: Condition = {
+    id: "",
     name: "",
     turnBased: false,
-    length: "",
+    length: "1",
     abilityScoreChanges: [],
     characterInfoChanges: [],
     rollChanges: [],
@@ -30,16 +35,20 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
     conditions: [],
     actionTypes: [],
   };
+  const router = useRouter();
+  //for error info displayed
+  const [finishedConditionButtonInfo, setFinishedConditionButtonInfo] =
+    useState("");
   const [lists, setLists] = useState<ListsResult>(defaultLists || listsProp);
-  const [turnsTillOver, setTurnsTillOver] = useState("");
-  const [manaPerTurn, setManaPerTurn] = useState("");
+  const [turnsTillOver, setTurnsTillOver] = useState("1");
+  const [manaPerTurn, setManaPerTurn] = useState("0");
   useEffect(() => {
-    invoke<ListsResult>("get_lists", {}).then((result) => setLists(result));
+    invoke<ListsResult>("grab_lists", {}).then((result) => setLists(result));
   }, []);
-
-  let conditionList = lists.conditions;
+  const [conditions, setConditions] = useState(lists.conditions);
   let abilityScoresList = lists.abilityScores;
   let characterInfoList = lists.characterInfo;
+  let rollsList = lists.rolls;
   const [focusedCondition, setFocusedCondition] = useState(defaultCondition);
   function handleEndTypeCheckbox(type: string) {
     setFocusedCondition((prev) => {
@@ -50,28 +59,166 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
       };
     });
   }
+  function checkAllRolls(): boolean {
+    let currentFocused = focusedCondition;
+    let lastChecked = true;
+    let i = 0;
+    while (i != currentFocused.abilityScoreChanges.length) {
+      let currentCheck = checkRoll(
+        currentFocused.abilityScoreChanges[i].changeEffect,
+        rollsList
+      );
+      if (!currentCheck.result) {
+        setFinishedConditionButtonInfo(
+          "Cannot add: " +
+            currentCheck.desc +
+            "(ability score " +
+            currentFocused.abilityScoreChanges[i].name +
+            ")"
+        );
+        return false;
+      }
+      i++;
+    }
+    let d = 0;
+    while (d != currentFocused.characterInfoChanges.length) {
+      let currentCheck = checkRoll(
+        currentFocused.characterInfoChanges[d].changeEffect,
+        rollsList
+      );
+      if (!currentCheck.result) {
+        setFinishedConditionButtonInfo(
+          "Cannot add: " +
+            currentCheck.desc +
+            "(character info " +
+            currentFocused.characterInfoChanges[d].name +
+            ")"
+        );
+        return false;
+      }
+      d++;
+    }
+    let x = 0;
+    while (x != currentFocused.rollChanges.length) {
+      let currentCheck = checkRoll(
+        currentFocused.rollChanges[x].changeEffect,
+        rollsList
+      );
+      if (!currentCheck.result) {
+        setFinishedConditionButtonInfo(
+          "Cannot add: " +
+            currentCheck.desc +
+            "(roll changes " +
+            currentFocused.characterInfoChanges[d].name +
+            ")"
+        );
+        return false;
+      }
+      x++;
+    }
+    return true;
+  }
+  /// saves focused condition to the conditions array or displays error
+  function finishCondition() {
+    let nameCheck = nameValidation(focusedCondition.name);
+    if (!nameCheck.result) {
+      setFinishedConditionButtonInfo("Cannot add: " + nameCheck.desc);
+      return;
+    }
+    let lengthCheck = checkRoll(focusedCondition.length, rollsList);
+    if (!lengthCheck.result) {
+      setFinishedConditionButtonInfo(
+        "Cannot add: " + lengthCheck.desc + "(length)"
+      );
+      return;
+    }
+    if (!checkAllRolls()) {
+      return;
+    }
+    setConditions((oldConditions) => {
+      //rewrote a decent ammount of the project to use IDs for this to be less jank
+      if (focusedCondition.id === "") {
+        if (
+          oldConditions.findIndex((condit) => {
+            return condit.name === focusedCondition.name;
+          }) != -1
+        ) {
+          setFinishedConditionButtonInfo("Cannot add: username already exists");
+          return oldConditions;
+        } else {
+          //created new
+          focusedCondition.id = generateID(oldConditions);
+          setFinishedConditionButtonInfo("Condition Added");
+          oldConditions.push(focusedCondition);
+          return [...oldConditions];
+        }
+      } else {
+        //update existing
+        oldConditions[
+          oldConditions.findIndex((item) => {
+            item.id === focusedCondition.id;
+          })
+        ] = focusedCondition;
+        setFinishedConditionButtonInfo("Condition Updated");
+        return [...oldConditions];
+      }
+    });
+  }
+
+  function handleRefocused(id: string) {
+    setFocusedCondition(
+      conditions.find((item) => {
+        return item.id === id;
+      }) || defaultCondition
+    );
+    setFinishedConditionButtonInfo("");
+  }
+  function handleNewButton() {
+    setFocusedCondition({ ...defaultCondition });
+  }
+  function finish() {
+    invoke<boolean>("overwrite_conditions", {
+      newConditions: conditions,
+    })
+      .then((result) => {
+        //move back to the basic menu to see if they are ready to move to the main screen
+        router.push("/editor");
+      })
+      .catch(console.error);
+  }
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        marginLeft: "2%",
-        marginRight: "2%",
-      }}
-    >
-      <h1>Conditions Editor</h1>
-      <div style={{ display: "flex", flexDirection: "row" }}>
+    <div className="main">
+      <EditorTitleAndFinish
+        title="Conditions Editor"
+        handleFinishButton={finish}
+      ></EditorTitleAndFinish>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+          height: "100%",
+        }}
+      >
         <div className="conditionContainerCollection">
           <div style={{ display: "flex", flexDirection: "row" }}>
             <input placeholder="Search Name"></input>
-            <button>NEW</button>
+            <button
+              onClick={() => {
+                handleNewButton();
+              }}
+            >
+              NEW
+            </button>
           </div>
-          {conditionList?.map((condit) => {
+          {conditions?.map((condit) => {
             // designate wheather its focused or not
             let containerType = "conditionContainerUnselected";
-            if (focusedCondition === condit) {
+            if (focusedCondition.id === condit.id) {
               containerType = "conditionContainerSelected";
             }
+
             //create length type
             let lengthType = "mana";
             if (condit.turnBased) {
@@ -95,7 +242,12 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
               changeListString = changeListString + "Rolls";
             }
             return (
-              <div className={containerType}>
+              <div
+                className={containerType}
+                onClick={() => {
+                  handleRefocused(condit.id);
+                }}
+              >
                 <h3 className="conditionContainerTitle">{condit.name}</h3>
                 <h4 className="conditionContainerLength">
                   {condit.length + " " + lengthType}
@@ -107,8 +259,20 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
         </div>
 
         <div className="editorContainer">
-          <input placeholder="Condition Name"></input>
+          <input
+            placeholder="Condition Name"
+            value={focusedCondition.name}
+            onChange={(val) =>
+              setFocusedCondition((condit) => {
+                return { ...condit, name: val.target.value };
+              })
+            }
+          ></input>
           <h2 style={{ justifyContent: "left" }}>Length</h2>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <h3 style={{ margin: "auto" }}>Turn Count</h3>
+            <h3 style={{ margin: "auto" }}>Mana Cost</h3>
+          </div>
           <div style={{ display: "flex", flexDirection: "row" }}>
             <input
               type="Checkbox"
@@ -116,7 +280,7 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
               onChange={(eve) => handleEndTypeCheckbox("turn")}
             ></input>
             <input
-              placeholder="Turn Count(5)"
+              type="number"
               disabled={!focusedCondition.turnBased}
               value={turnsTillOver}
               onChange={(eve) => {
@@ -129,7 +293,7 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
               onChange={(eve) => handleEndTypeCheckbox("mana")}
             ></input>
             <input
-              placeholder="Mana Per Turn"
+              type="number"
               disabled={focusedCondition.turnBased}
               value={manaPerTurn}
               onChange={(eve) => {
@@ -149,7 +313,27 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
             condition={focusedCondition}
             setCondition={setFocusedCondition}
           ></AbilityScoreEffectsTable>
-          <h2 style={{ justifyContent: "left" }}>Rolls</h2>
+          <RollsEffectsTable
+            category="Rolls"
+            rolls={rollsList}
+            condition={focusedCondition}
+            setCondition={setFocusedCondition}
+          ></RollsEffectsTable>
+          <h3 style={{ color: "red" }}>{finishedConditionButtonInfo}</h3>
+          <button
+            style={{
+              display: "inline",
+              marginTop: "5%",
+              width: "100%",
+              height: "30px",
+              textAlign: "center",
+            }}
+            onClick={() => {
+              finishCondition();
+            }}
+          >
+            Finish Current Condition
+          </button>
         </div>
       </div>
     </div>

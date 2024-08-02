@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { CharacterInfo, Condition, Change } from "@/app/globalInterfaces";
 interface CharacterEffectsProps {
   category: string;
@@ -16,11 +16,15 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
   let charChangeList = condition.characterInfoChanges;
   const [selectedCharacterInfo, setselectedCharacterInfo] = useState("name");
   function updateItemChange(changeName: string, newChange: string) {
+    console.log(condition);
     setCondition((oldCondition) => {
       oldCondition!.characterInfoChanges.find((change) => {
-        change.name == changeName;
+        console.log("changename:" + change.name);
+        console.log("changenametru:" + (change.name == changeName));
+        return change.name == changeName;
       })!.changeEffect = newChange;
-      return oldCondition;
+      console.log("finished");
+      return { ...oldCondition };
     });
   }
   function removeCharacterChangeByName(target: string) {
@@ -129,6 +133,8 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
                   <input
                     value={item.changeEffect}
                     onChange={(eve) => {
+                      console.log(item.name);
+                      console.log(eve.target.value);
                       updateItemChange(item.name, eve.target.value);
                     }}
                   ></input>

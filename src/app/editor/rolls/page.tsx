@@ -6,6 +6,7 @@ import {
   getVarList,
   nameValidation,
   rollTraceTest,
+  generateID,
 } from "../../helperFunctions";
 import { RollEditCard } from "./RollEditCard";
 import { invoke } from "@tauri-apps/api";
@@ -21,7 +22,6 @@ import {
 import { defaultRolls } from "./data";
 import Select, { ActionMeta, MultiValue } from "react-select";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
-
 const legitSymbols: String[] = ["+", "-", "*", "/"];
 const defaultVars: String[] = ["str", "dex", "con", "int", "wis", "cha"];
 export const EditRolls: React.FC = () => {
@@ -33,7 +33,7 @@ export const EditRolls: React.FC = () => {
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
   useEffect(() => {
-    invoke<ListsResult>("get_lists", {})
+    invoke<ListsResult>("grab_lists", {})
       .then((result) => {
         if (result.rolls.length != 0) {
           setRolls(result.rolls);
@@ -47,6 +47,7 @@ export const EditRolls: React.FC = () => {
   }, []);
   //editor info
   const [editorInputs, setEditorInputs] = useState<Roll>({
+    id: "",
     name: "",
     roll: "",
     healthCost: "",
@@ -109,13 +110,9 @@ export const EditRolls: React.FC = () => {
   function setEditorActionTypes(
     selectList: MultiValue<{ value: string; label: string }>
   ) {
-    let currentActionTypes: ActionType[] = [];
+    let currentActionTypes: string[] = [];
     for (let i = 0; i < selectList.length; i++) {
-      currentActionTypes.push(
-        actionTypes.find(
-          (actionType) => actionType.name === selectList[i].value
-        )!
-      );
+      currentActionTypes.push(selectList[i].value);
     }
     setEditorInputs((prevEditorRoll) => {
       return { ...prevEditorRoll, actionTypes: currentActionTypes };
@@ -124,33 +121,25 @@ export const EditRolls: React.FC = () => {
   function setEditorConditions(
     selectList: MultiValue<{ value: string; label: string }>
   ) {
-    let currentConditions: Condition[] = [];
+    let currentConditions: string[] = [];
     for (let i = 0; i < selectList.length; i++) {
-      currentConditions.push(
-        conditions.find(
-          (actionType) => actionType.name === selectList[i].value
-        )!
-      );
+      currentConditions.push(selectList[i].value);
     }
     setEditorInputs((prevEditorRoll) => {
       return { ...prevEditorRoll, conditions: currentConditions };
     });
   }
 
-  //need to add final checks of vars existence in all rolls and trace var loops
-  //need to add an ability to refresh the rolls
+  //need to add the ability to edit existing rolls without deleting them and generating a new ID
   function handleAddRoll() {
     let currentEditorRoll = editorInputs;
     //check if it fits a regix and refresh the roll list if it mactches and is added
-    console.log("before: " + currentEditorRoll.name);
     currentEditorRoll.name = currentEditorRoll.name.trim();
-    console.log("after: " + currentEditorRoll.name);
     currentEditorRoll.roll = currentEditorRoll.roll.trim();
     currentEditorRoll.healthCost = currentEditorRoll.healthCost.trim();
     currentEditorRoll.manaCost = currentEditorRoll.manaCost.trim();
 
     let nameTest = nameValidation(currentEditorRoll.name);
-    console.log("after2: " + currentEditorRoll.name);
     if (!nameTest.result) {
       setTooltip("add failed: " + nameTest.desc);
       return;
@@ -201,6 +190,9 @@ export const EditRolls: React.FC = () => {
               idealRoll += char;
             }
           }
+          if ((currentEditorRoll.id = "")) {
+            currentEditorRoll.id = generateID(prev);
+          }
           console.log(' "' + currentEditorRoll.name + '" has been added2');
           prev.push({ ...currentEditorRoll });
         }
@@ -214,6 +206,7 @@ export const EditRolls: React.FC = () => {
       setEditorActionTypes([]);
       setEditorConditions([]);
       setTooltip(' "' + currentEditorRoll.name + '" has been added');
+      console.log(rolls);
     } else {
       setTooltip("Failed add: This name is already taken");
     }
@@ -239,12 +232,12 @@ export const EditRolls: React.FC = () => {
         setEditorManaCost(rolls[i].manaCost);
         setEditorActionTypes(
           rolls[i].actionTypes.map((actionType) => {
-            return { label: actionType.name, value: actionType.name };
+            return { label: actionType, value: actionType };
           })
         );
         setEditorConditions(
           rolls[i].conditions.map((condition) => {
-            return { label: condition.name, value: condition.name };
+            return { label: condition, value: condition };
           })
         );
         handleRemoveRoll(editName);
@@ -321,28 +314,39 @@ export const EditRolls: React.FC = () => {
             placeholder="Action Type"
             className="actionsTypeSelect"
             closeMenuOnSelect={false}
-            value={editorInputs.actionTypes.map((actionType) => {
-              return { value: actionType.name, label: actionType.name };
+            value={editorInputs.actionTypes.map((actionID) => {
+              return {
+                value: actionID,
+                label: actionTypes.find((actionType) => {
+                  return actionType.id == actionID;
+                })!.name,
+              };
             })}
             hideSelectedOptions={true}
             isMulti={true}
-            onChange={(eve) => setEditorActionTypes(eve)}
+            onChange={setEditorActionTypes}
             options={actionTypes.map((actionType) => {
-              return { value: actionType.name, label: actionType.name };
+              return { value: actionType.id, label: actionType.name };
             })}
           ></Select>
+
           <Select
             placeholder="Conditions Aplied to self"
             className="actionsTypeSelect"
             closeMenuOnSelect={false}
             value={editorInputs.conditions.map((condition) => {
-              return { value: condition.name, label: condition.name };
+              return {
+                value: condition,
+                label: conditions.find((condit) => {
+                  return condit.id == condition;
+                })!.name,
+              };
             })}
             hideSelectedOptions={true}
             isMulti={true}
             onChange={setEditorConditions}
-            options={conditions.map((actionType) => {
-              return { value: actionType.name, label: actionType.name };
+            options={conditions.map((condition) => {
+              return { value: condition.id, label: condition.name };
             })}
           ></Select>
         </div>
@@ -376,6 +380,8 @@ export const EditRolls: React.FC = () => {
               <RollEditCard
                 key={currentRoll.name}
                 currentRoll={currentRoll}
+                conditions={conditions}
+                actionTypes={actionTypes}
                 removeRoll={() => handleRemoveRoll(currentRoll.name)}
                 editRoll={() => handleEditRoll(currentRoll.name)}
               ></RollEditCard>

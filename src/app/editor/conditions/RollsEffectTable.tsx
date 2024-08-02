@@ -14,7 +14,10 @@ export const RollsEffectsTable: React.FC<RollsEffectsTableProps> = ({
   condition,
   setCondition,
 }) => {
-  const [selectedRoll, setSelectedRoll] = useState("strength");
+  console.log("Component started", rolls);
+  const [selectedRoll, setSelectedRoll] = useState(
+    rolls.length > 0 ? rolls[0].name : "N/A"
+  );
   function refreshSelected() {
     let newSelect = rolls.find((roll) => {
       return !condition.rollChanges.some(

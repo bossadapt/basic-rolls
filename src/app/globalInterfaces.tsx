@@ -46,7 +46,7 @@ export interface AbilityScore {
 }
 
 export interface CharacterInfo {
-  info_type: string;
+  infoType: string;
   input: string;
 }
 

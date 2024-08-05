@@ -127,10 +127,10 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
   function getRollByName(varName: string): string {
     let rollAttempt = rolls.find(
       (currentRoll) =>
-        currentRoll.roll_name.toLocaleLowerCase() == varName.toLocaleLowerCase()
+        currentRoll.name.toLocaleLowerCase() == varName.toLocaleLowerCase()
     );
     if (rollAttempt) {
-      return rollAttempt.default_roll;
+      return rollAttempt.roll;
     }
     let abilityAttempt = abilityScores.find(
       (ability) =>
@@ -318,10 +318,10 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
               {rolls
                 .filter((item) => {
                   return (
-                    item.default_roll
+                    item.roll
                       .toLocaleLowerCase()
                       .includes(search.toLocaleLowerCase()) ||
-                    item.roll_name
+                    item.name
                       .toLocaleLowerCase()
                       .includes(search.toLocaleLowerCase())
                   );
@@ -329,16 +329,16 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
                 .map((roll) => {
                   return (
                     <tr
-                      key={roll.roll_name}
+                      key={roll.name}
                       className="row"
                       onClick={() =>
                         setCurrentRoll((cur) => {
-                          return cur + " var(" + roll.roll_name + ") ";
+                          return cur + " var(" + roll.name + ") ";
                         })
                       }
                     >
-                      <th>{roll.roll_name}</th>
-                      <td>{roll.default_roll}</td>
+                      <th>{roll.name}</th>
+                      <td>{roll.roll}</td>
                     </tr>
                   );
                 })}

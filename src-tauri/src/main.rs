@@ -53,6 +53,7 @@ struct Roll {
 }
 #[derive(Serialize, Deserialize)]
 struct CharacterInfo {
+    #[serde(rename = "infoType")]
     info_type: String,
     input: String,
 }
@@ -323,7 +324,7 @@ fn grab_rolls() -> Result<Vec<Roll>, ()> {
     while let Some(row) = rows.next().unwrap() {
         let current_id: String = row.get(0).unwrap();
         let current_condition: String = row.get(1).unwrap();
-        let condition_list_length = action_type_lists.len();
+        let condition_list_length = condition_list.len();
         if condition_list_length > 0 && condition_list[condition_list_length - 1].id == current_id {
             condition_list[condition_list_length - 1]
                 .arr

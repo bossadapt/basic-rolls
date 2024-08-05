@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRouter } from "next/navigation";
 import { AbilityScore } from "@/app/globalInterfaces";
-import "./editor.css";
+import "./abilityScore.css";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
 interface EditAbilityScoreProps {
   abilityScores: AbilityScore[];
@@ -83,47 +83,67 @@ export const EditAbilityScore: React.FC = () => {
         handleFinishButton={finalizeScores}
       ></EditorTitleAndFinish>
       <hr style={{ marginBottom: "5%" }}></hr>
-      <div className="horiz">
-        <h3 className="scoreText">Strength</h3>
-        <input
-          type="number"
-          value={strength}
-          onChange={(e) => setStrength(parseInt(e.target.value) || 0)}
-        />
-        <h3 className="scoreText">Dexterity</h3>
-        <input
-          type="number"
-          value={dexterity}
-          onChange={(e) => setDexterity(parseInt(e.target.value) || 0)}
-        />
-      </div>
-      <div className="horiz">
-        <h3 className="scoreText">Constitution</h3>
-        <input
-          type="number"
-          value={constitution}
-          onChange={(e) => setConstitution(parseInt(e.target.value) || 0)}
-        />
-        <h3 className="scoreText">Intelligence</h3>
-        <input
-          type="number"
-          value={intelligence}
-          onChange={(e) => setIntelligence(parseInt(e.target.value) || 0)}
-        />
-      </div>
-      <div className="horiz">
-        <h3 className="scoreText">Wisdom</h3>
-        <input
-          type="number"
-          value={wisdom}
-          onChange={(e) => setWisdom(parseInt(e.target.value) || 0)}
-        />
-        <h3 className="scoreText">Charism</h3>
-        <input
-          type="number"
-          value={charism}
-          onChange={(e) => setCharism(parseInt(e.target.value) || 0)}
-        />
+      <div className="characterContents">
+        <div className="characterHoriz">
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Strength</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={strength}
+              onChange={(e) => setStrength(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Dexterity</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={dexterity}
+              onChange={(e) => setDexterity(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+        <div className="characterHoriz">
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Constitution</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={constitution}
+              onChange={(e) => setConstitution(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Intelligence</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={intelligence}
+              onChange={(e) => setIntelligence(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </div>
+        <div className="characterHoriz">
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Wisdom</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={wisdom}
+              onChange={(e) => setWisdom(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <div className="characterStatContainer">
+            <h3 className="scoreText">Charism</h3>
+            <input
+              type="number"
+              className="abilityScoreInput"
+              value={charism}
+              onChange={(e) => setCharism(parseInt(e.target.value) || 0)}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

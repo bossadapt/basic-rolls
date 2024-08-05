@@ -15,10 +15,8 @@ import { invoke } from "@tauri-apps/api";
 import RollsEffectsTable from "./RollsEffectTable";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
 import { checkRoll, generateID, nameValidation } from "@/app/helperFunctions";
-interface ConditionProps {
-  listsProp: ListsResult;
-}
-export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
+
+export const Conditions: React.FC = () => {
   const defaultCondition: Condition = {
     id: "",
     name: "",
@@ -39,13 +37,17 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
   //for error info displayed
   const [finishedConditionButtonInfo, setFinishedConditionButtonInfo] =
     useState("");
-  const [lists, setLists] = useState<ListsResult>(defaultLists || listsProp);
+  const [lists, setLists] = useState<ListsResult>(defaultLists);
   const [turnsTillOver, setTurnsTillOver] = useState("1");
   const [manaPerTurn, setManaPerTurn] = useState("0");
   useEffect(() => {
-    invoke<ListsResult>("grab_lists", {}).then((result) => setLists(result));
+    invoke<ListsResult>("grab_lists", {}).then((result) => {
+      console.log("grab_lists");
+      console.log(result);
+      setLists(result);
+    });
   }, []);
-  const [conditions, setConditions] = useState(lists.conditions);
+  let conditions = lists.conditions;
   let abilityScoresList = lists.abilityScores;
   let characterInfoList = lists.characterInfo;
   let rollsList = lists.rolls;
@@ -61,7 +63,6 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
   }
   function checkAllRolls(): boolean {
     let currentFocused = focusedCondition;
-    let lastChecked = true;
     let i = 0;
     while (i != currentFocused.abilityScoreChanges.length) {
       let currentCheck = checkRoll(
@@ -120,12 +121,13 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
   }
   /// saves focused condition to the conditions array or displays error
   function finishCondition() {
-    let nameCheck = nameValidation(focusedCondition.name);
+    let currentFocusedCondition = { ...focusedCondition };
+    let nameCheck = nameValidation(currentFocusedCondition.name);
     if (!nameCheck.result) {
       setFinishedConditionButtonInfo("Cannot add: " + nameCheck.desc);
       return;
     }
-    let lengthCheck = checkRoll(focusedCondition.length, rollsList);
+    let lengthCheck = checkRoll(currentFocusedCondition.length, rollsList);
     if (!lengthCheck.result) {
       setFinishedConditionButtonInfo(
         "Cannot add: " + lengthCheck.desc + "(length)"
@@ -135,32 +137,33 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
     if (!checkAllRolls()) {
       return;
     }
-    setConditions((oldConditions) => {
+    setLists((oldLists) => {
       //rewrote a decent ammount of the project to use IDs for this to be less jank
-      if (focusedCondition.id === "") {
+      let oldConditions = oldLists.conditions;
+      if (currentFocusedCondition.id === "") {
         if (
           oldConditions.findIndex((condit) => {
-            return condit.name === focusedCondition.name;
+            return condit.name === currentFocusedCondition.name;
           }) != -1
         ) {
           setFinishedConditionButtonInfo("Cannot add: username already exists");
-          return oldConditions;
+          return oldLists;
         } else {
           //created new
-          focusedCondition.id = generateID(oldConditions);
+          currentFocusedCondition.id = generateID(oldConditions);
           setFinishedConditionButtonInfo("Condition Added");
-          oldConditions.push(focusedCondition);
-          return [...oldConditions];
+          oldConditions.push(currentFocusedCondition);
+          return { ...oldLists };
         }
       } else {
         //update existing
         oldConditions[
           oldConditions.findIndex((item) => {
-            item.id === focusedCondition.id;
+            item.id === currentFocusedCondition.id;
           })
-        ] = focusedCondition;
+        ] = currentFocusedCondition;
         setFinishedConditionButtonInfo("Condition Updated");
-        return [...oldConditions];
+        return { ...oldLists };
       }
     });
   }
@@ -198,13 +201,14 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
           display: "flex",
           flexDirection: "row",
           width: "100%",
-          height: "100%",
+          height: "80vh",
         }}
       >
         <div className="conditionContainerCollection">
           <div style={{ display: "flex", flexDirection: "row" }}>
-            <input placeholder="Search Name"></input>
+            <input placeholder="Search Name" style={{ width: "80%" }}></input>
             <button
+              style={{ width: "20%" }}
               onClick={() => {
                 handleNewButton();
               }}
@@ -259,6 +263,7 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
         </div>
 
         <div className="editorContainer">
+          <h2 style={{ justifyContent: "left" }}>Condition Name</h2>
           <input
             placeholder="Condition Name"
             value={focusedCondition.name}
@@ -321,13 +326,6 @@ export const Conditions: React.FC<ConditionProps> = ({ listsProp }) => {
           ></RollsEffectsTable>
           <h3 style={{ color: "red" }}>{finishedConditionButtonInfo}</h3>
           <button
-            style={{
-              display: "inline",
-              marginTop: "5%",
-              width: "100%",
-              height: "30px",
-              textAlign: "center",
-            }}
             onClick={() => {
               finishCondition();
             }}

@@ -45,9 +45,9 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
   function refreshSelected() {
     let newSelect = characterInfoList.find((characterInfo) => {
       return !condition.characterInfoChanges.some(
-        (oldCond) => oldCond.name === characterInfo.info_type
+        (oldCond) => oldCond.name === characterInfo.infoType
       );
-    })?.info_type;
+    })?.infoType;
     if (!newSelect) {
       newSelect = "";
     }
@@ -93,13 +93,13 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
           {characterInfoList
             .filter((originalItem) => {
               return !charChangeList.some(
-                (changeItem) => changeItem.name === originalItem.info_type
+                (changeItem) => changeItem.name === originalItem.infoType
               );
             })
             .map((item, index) => {
               return (
-                <option key={item.info_type + index} value={item.info_type}>
-                  {item.info_type}
+                <option key={item.infoType + index} value={item.infoType}>
+                  {item.infoType}
                 </option>
               );
             })}
@@ -116,7 +116,7 @@ export const CharacterEffectTable: React.FC<CharacterEffectsProps> = ({
           ADD
         </button>
       </div>
-      <table>
+      <table className="conditionTable">
         <thead>
           <tr>
             <th>Variable</th>

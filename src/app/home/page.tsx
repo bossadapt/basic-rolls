@@ -13,8 +13,9 @@ import {
   Condition,
   ListsResult,
 } from "../globalInterfaces";
-interface homeProps {}
+import { useRouter } from "next/navigation";
 export const Home: React.FC = () => {
+  const router = useRouter();
   let defailtAbility: AbilityScore[] = [
     { ability: "str", score: 10 },
     { ability: "dex", score: 10 },
@@ -24,10 +25,10 @@ export const Home: React.FC = () => {
     { ability: "cha", score: 10 },
   ];
   let defailtCharacterInfo: CharacterInfo[] = [
-    { info_type: "name", input: "Character" },
-    { info_type: "hp", input: "0" },
-    { info_type: "ac", input: "10" },
-    { info_type: "mana", input: "2" },
+    { infoType: "name", input: "Character" },
+    { infoType: "hp", input: "0" },
+    { infoType: "ac", input: "10" },
+    { infoType: "mana", input: "2" },
   ];
   const [abilityScores, setAbilityScores] = useState(defailtAbility);
   const [characterInfo, setCharacterInfo] = useState(defailtCharacterInfo);
@@ -36,7 +37,7 @@ export const Home: React.FC = () => {
   const [rolls, setRolls] = useState(defailtRoll);
   useEffect(() => {
     console.log("listsCalledStart");
-    invoke<ListsResult>("get_lists", {})
+    invoke<ListsResult>("grab_lists", {})
       .then((result) => {
         setRolls(result.rolls);
         setAbilityScores(result.abilityScores);
@@ -46,8 +47,55 @@ export const Home: React.FC = () => {
       .catch(console.error);
     console.log("listsCalledEnded");
   }, []);
+  function editingPageClickedHandler(pageName: String) {
+    //save state here when i have added a way
+    router.push("../editor/" + pageName);
+  }
   return (
     <div className="root">
+      <div className="navbar">
+        <h3>Time Passing:</h3>
+        <button>Turn</button>
+        <button>Combat</button>
+        <button>Short Rest</button>
+        <button>Long Rest</button>
+        <h3 style={{ marginLeft: "auto" }}>Editing Pages:</h3>
+        <button
+          onClick={() => {
+            editingPageClickedHandler("abilityScores");
+          }}
+        >
+          Ability Scores
+        </button>
+        <button
+          onClick={() => {
+            editingPageClickedHandler("actionTypes");
+          }}
+        >
+          Action Types
+        </button>
+        <button
+          onClick={() => {
+            editingPageClickedHandler("character");
+          }}
+        >
+          Character Info
+        </button>
+        <button
+          onClick={() => {
+            editingPageClickedHandler("conditions");
+          }}
+        >
+          Conditions
+        </button>
+        <button
+          onClick={() => {
+            editingPageClickedHandler("rolls");
+          }}
+        >
+          Rolls
+        </button>
+      </div>
       <div className="horiz">
         <div>
           <Character

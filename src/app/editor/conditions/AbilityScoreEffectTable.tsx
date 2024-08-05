@@ -112,7 +112,7 @@ export const AbilityScoreEffectsTable: React.FC<AbilityScoreEffectsProps> = ({
           ADD
         </button>
       </div>
-      <table>
+      <table className="conditionTable">
         <thead>
           <tr>
             <th>Ability</th>

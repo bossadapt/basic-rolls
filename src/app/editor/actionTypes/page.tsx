@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import "./action.css";
 import "@/app/globals.css";
+import { initialLimit, defaultActionTypes } from "./data";
 import {
   ActionType,
   ActionLimit,
@@ -17,32 +18,6 @@ export const ActionTypeEditor: React.FC = () => {
   const [toolTip, setToolTip] = useState(
     "An action type will be used to attach to rolls to either limit their use and/or attach modifiers to them during conditions. Click to edit(it will overwrite stuff currently in fields)"
   );
-  let initialLimit: ActionLimit[] = [
-    {
-      time: ActionTypeLimit.Turn,
-      active: false,
-      useCount: 1,
-      timeCount: 1,
-    },
-    {
-      time: ActionTypeLimit.Combat,
-      active: false,
-      useCount: 1,
-      timeCount: 1,
-    },
-    {
-      time: ActionTypeLimit.ShortRest,
-      active: false,
-      useCount: 1,
-      timeCount: 1,
-    },
-    {
-      time: ActionTypeLimit.LongRest,
-      active: false,
-      useCount: 1,
-      timeCount: 1,
-    },
-  ];
   let defaultActionType: ActionType = {
     id: "",
     name: "",
@@ -50,14 +25,17 @@ export const ActionTypeEditor: React.FC = () => {
   };
   const [toolTipColor, setToolTipColor] = useState("grey");
   const [actionTypeNameSearch, setActionTypeNameSearch] = useState("");
-  const [actionTypes, setActionTypes] = useState<ActionType[]>([]);
+  const [actionTypes, setActionTypes] =
+    useState<ActionType[]>(defaultActionTypes);
   const [focusedActionType, setFocusedActionType] = useState(defaultActionType);
   let finalizeCurrentButtonTitle =
     focusedActionType.id === "" ? "Add" : "Update";
   useEffect(() => {
     invoke<ActionType[]>("grab_action_types", {})
       .then((result) => {
-        setActionTypes(result);
+        if (result.length > 0) {
+          setActionTypes(result);
+        }
       })
       .catch(console.error);
   }, []);
@@ -215,13 +193,13 @@ export const ActionTypeEditor: React.FC = () => {
         }}
       >
         <EditorTitleAndFinish
-          title="Ability Type Editor"
+          title="Action Type Editor"
           handleFinishButton={finishButtonHandler}
         ></EditorTitleAndFinish>
       </div>
       <div className="column">
         <p style={{ color: toolTipColor, textAlign: "center" }}>{toolTip}</p>
-        <div className="row">
+        <div className="actionRow">
           <input
             placeholder="Name Of Action Type"
             style={{ marginLeft: "auto", marginRight: "auto" }}
@@ -256,6 +234,7 @@ export const ActionTypeEditor: React.FC = () => {
                     style={{ textAlign: "center", margin: "0" }}
                   >
                     <input
+                      style={{ width: "100%" }}
                       type="checkbox"
                       checked={en.active}
                       onChange={(eve) =>
@@ -297,7 +276,7 @@ export const ActionTypeEditor: React.FC = () => {
         </table>
         <button
           onClick={() => actionTypeAddHandler({ ...focusedActionType })}
-          style={{ width: "60%", lineHeight: "50px", fontSize: "20px" }}
+          className="addButton"
         >
           {finalizeCurrentButtonTitle} Action Type
         </button>

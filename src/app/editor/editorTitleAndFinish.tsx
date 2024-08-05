@@ -14,6 +14,7 @@ export const EditorTitleAndFinish: React.FC<EditorTitleAndFinishProps> = ({
         display: "flex",
         flexDirection: "row",
         width: "90%",
+        height: "20vh",
       }}
     >
       <button

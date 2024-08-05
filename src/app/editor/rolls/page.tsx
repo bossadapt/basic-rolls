@@ -46,7 +46,7 @@ export const EditRolls: React.FC = () => {
       .catch(console.error);
   }, []);
   //editor info
-  const [editorInputs, setEditorInputs] = useState<Roll>({
+  let defaultRoll = {
     id: "",
     name: "",
     roll: "",
@@ -54,7 +54,8 @@ export const EditRolls: React.FC = () => {
     manaCost: "",
     actionTypes: [],
     conditions: [],
-  });
+  };
+  const [editorInputs, setEditorInputs] = useState<Roll>(defaultRoll);
 
   //search
   const [searchInput, setSearchInput] = useState("");
@@ -131,7 +132,7 @@ export const EditRolls: React.FC = () => {
   }
 
   //need to add the ability to edit existing rolls without deleting them and generating a new ID
-  function handleAddRoll() {
+  function addRollHandler() {
     let currentEditorRoll = editorInputs;
     //check if it fits a regix and refresh the roll list if it mactches and is added
     currentEditorRoll.name = currentEditorRoll.name.trim();
@@ -147,8 +148,9 @@ export const EditRolls: React.FC = () => {
     if (
       !rolls.some(
         (ex) =>
-          ex.name.toLocaleLowerCase() ==
-            currentEditorRoll.name.toLocaleLowerCase() ||
+          (ex.name.toLocaleLowerCase() ===
+            currentEditorRoll.name.toLocaleLowerCase() &&
+            ex.id !== currentEditorRoll.id) ||
           defaultVars.includes(currentEditorRoll.name.toLocaleLowerCase())
       )
     ) {
@@ -171,40 +173,33 @@ export const EditRolls: React.FC = () => {
       }
 
       setRolls((prev) => {
-        if (
-          !prev.some(
-            (entry) =>
-              entry.name.toLocaleLowerCase() ===
-              currentEditorRoll.name.toLocaleLowerCase()
-          )
-        ) {
-          // add spacing and remove dumb spacing for dumb display overload
-          let idealRoll = "";
-          for (let i = 0; i < currentEditorRoll.roll.length; i++) {
-            let char = currentEditorRoll.roll.charAt(i);
-            if (char === " ") {
-              //only my spaces are allowed >:^D
-            } else if (legitSymbols.includes(char)) {
-              idealRoll += " " + char + " ";
-            } else {
-              idealRoll += char;
-            }
+        // add spacing and remove dumb spacing for dumb display overload
+        let idealRoll = "";
+        for (let i = 0; i < currentEditorRoll.roll.length; i++) {
+          let char = currentEditorRoll.roll.charAt(i);
+          if (char === " ") {
+            //only my spaces are allowed >:^D
+          } else if (legitSymbols.includes(char)) {
+            idealRoll += " " + char + " ";
+          } else {
+            idealRoll += char;
           }
-          if ((currentEditorRoll.id = "")) {
-            currentEditorRoll.id = generateID(prev);
-          }
-          console.log(' "' + currentEditorRoll.name + '" has been added2');
+        }
+        if (currentEditorRoll.id === "") {
+          currentEditorRoll.id = generateID(prev);
+          console.log(' "' + currentEditorRoll.name + '" has been added');
           prev.push({ ...currentEditorRoll });
+        } else {
+          console.log(
+            ' "' + currentEditorRoll.name + '" has been used as an update'
+          );
+          prev[prev.findIndex((item) => item.id === currentEditorRoll.id)] =
+            currentEditorRoll;
         }
         return prev;
       });
 
-      setEditorName("");
-      setEditorRoll("");
-      setEditorHealthCost("");
-      setEditorManaCost("");
-      setEditorActionTypes([]);
-      setEditorConditions([]);
+      setEditorInputs(defaultRoll);
       setTooltip(' "' + currentEditorRoll.name + '" has been added');
       console.log(rolls);
     } else {
@@ -212,38 +207,16 @@ export const EditRolls: React.FC = () => {
     }
   }
 
-  function handleRemoveRoll(removedName: string) {
+  function removeRollHandler(removedID: string) {
     setRolls((prev) => {
       console.log(prev);
-      let output = prev.filter(
-        (e) => e.name.toLocaleLowerCase() !== removedName.toLocaleLowerCase()
-      );
+      let output = prev.filter((e) => e.id !== removedID);
       console.log(output);
       return output;
     });
   }
-  function handleEditRoll(editName: string) {
-    let editNameLow = editName.toLocaleLowerCase();
-    for (let i = 0; i < rolls.length; i++) {
-      if (rolls[i].name.toLocaleLowerCase() === editNameLow) {
-        setEditorName(rolls[i].name);
-        setEditorRoll(rolls[i].roll);
-        setEditorHealthCost(rolls[i].healthCost);
-        setEditorManaCost(rolls[i].manaCost);
-        setEditorActionTypes(
-          rolls[i].actionTypes.map((actionType) => {
-            return { label: actionType, value: actionType };
-          })
-        );
-        setEditorConditions(
-          rolls[i].conditions.map((condition) => {
-            return { label: condition, value: condition };
-          })
-        );
-        handleRemoveRoll(editName);
-        break;
-      }
-    }
+  function editRollHandler(currentRoll: Roll) {
+    setEditorInputs(currentRoll);
   }
 
   return (
@@ -350,18 +323,17 @@ export const EditRolls: React.FC = () => {
             })}
           ></Select>
         </div>
-        <button className="addButton" onClick={handleAddRoll}>
+        <button className="addRoleButton" onClick={addRollHandler}>
           +
         </button>
       </div>
       <h3>{tooltip}</h3>
-      <hr></hr>
       <div
         className="horiz"
         style={{ marginRight: "70%", marginLeft: "5%", maxHeight: "5vh" }}
       >
         <input
-          style={{ width: "100%", height: "80%" }}
+          style={{ width: "100%", height: "50%" }}
           placeholder="search by name"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -382,8 +354,8 @@ export const EditRolls: React.FC = () => {
                 currentRoll={currentRoll}
                 conditions={conditions}
                 actionTypes={actionTypes}
-                removeRoll={() => handleRemoveRoll(currentRoll.name)}
-                editRoll={() => handleEditRoll(currentRoll.name)}
+                removeRoll={() => removeRollHandler(currentRoll.id)}
+                editRoll={() => editRollHandler(currentRoll)}
               ></RollEditCard>
             );
           })}

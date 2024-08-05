@@ -8,19 +8,40 @@
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.navbar {
+  display: flex;
+  flex-direction: row;
+  margin-top: 5px;
+  border-bottom: 1px solid #ccc;
+}
+
+.navbar > button {
+  margin: 0px;
+  font-size: 15px;
+}
+
+.navbar > h3 {
+  font-size: 15px;
+  margin: 0px;
+}
+
 .categoryTitle {
   margin-bottom: 0;
   margin-top: 10px;
   font-size: 23px;
 }
+
 .abilityScoreText {
   width: 33%;
 }
+
 .tableHead {
   position: sticky;
   top: 0;
   background-color: rgb(83, 82, 82);
 }
+
 .row {
   background-color: grey;
   overflow: hidden;
@@ -29,25 +50,30 @@
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none; /* Standard */
 }
+
 .horiz {
   display: flex;
   flex-direction: row;
 }
+
 .horiz > div {
   flex: 1;
   border-right: 1px solid #ccc;
   border-left: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
+
 .Toastify__toast--warning {
   font-size: 13px;
   max-height: 16px;
   margin: 0;
 }
+
 .Toastify__toast--warning > div {
   margin: 0;
   padding: 0;
 }
+
 .horiz > div:first-child {
   border-left: 0;
 }

@@ -14,7 +14,6 @@ export const RollsEffectsTable: React.FC<RollsEffectsTableProps> = ({
   condition,
   setCondition,
 }) => {
-  console.log("Component started", rolls);
   const [selectedRoll, setSelectedRoll] = useState(
     rolls.length > 0 ? rolls[0].name : "N/A"
   );
@@ -115,7 +114,7 @@ export const RollsEffectsTable: React.FC<RollsEffectsTableProps> = ({
             ADD
           </button>
         </div>
-        <table>
+        <table className="conditionTable">
           <thead>
             <tr>
               <th>Ability</th>

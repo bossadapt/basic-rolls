@@ -17,24 +17,24 @@ export const Character: React.FC<CharacterProps> = ({
   const [manaChange, setManaChange] = useState("");
   //turning array into callable/readable names
   let characterName = characterInfo.find(
-    (infoBit) => infoBit.info_type === "name"
+    (infoBit) => infoBit.infoType === "name"
   )!.input;
   let characterHealth = characterInfo.find(
-    (infoBit) => infoBit.info_type === "hp"
+    (infoBit) => infoBit.infoType === "hp"
   )!.input;
   let characterAC = characterInfo.find(
-    (infoBit) => infoBit.info_type === "ac"
+    (infoBit) => infoBit.infoType === "ac"
   )!.input;
   let characterMana = characterInfo.find(
-    (infoBit) => infoBit.info_type === "mana"
+    (infoBit) => infoBit.infoType === "mana"
   )!.input;
 
   function setName(name: string) {
     setCharacterInfo((prevCharacterList) => {
       let index = prevCharacterList.findIndex(
-        (infoBit) => infoBit.info_type === "name"
+        (infoBit) => infoBit.infoType === "name"
       )!;
-      prevCharacterList[index] = { info_type: "name", input: name };
+      prevCharacterList[index] = { infoType: "name", input: name };
       return prevCharacterList.slice();
     });
   }
@@ -97,27 +97,27 @@ export const Character: React.FC<CharacterProps> = ({
   function setHP(hp: string) {
     setCharacterInfo((prevCharacterList) => {
       let index = prevCharacterList.findIndex(
-        (infoBit) => infoBit.info_type === "hp"
+        (infoBit) => infoBit.infoType === "hp"
       )!;
-      prevCharacterList[index] = { info_type: "hp", input: hp };
+      prevCharacterList[index] = { infoType: "hp", input: hp };
       return prevCharacterList.slice();
     });
   }
   function setAC(ac: string) {
     setCharacterInfo((prevCharacterList) => {
       let index = prevCharacterList.findIndex(
-        (infoBit) => infoBit.info_type === "ac"
+        (infoBit) => infoBit.infoType === "ac"
       )!;
-      prevCharacterList[index] = { info_type: "ac", input: ac };
+      prevCharacterList[index] = { infoType: "ac", input: ac };
       return prevCharacterList.slice();
     });
   }
   function setMana(mana: string) {
     setCharacterInfo((prevCharacterList) => {
       let index = prevCharacterList.findIndex(
-        (infoBit) => infoBit.info_type === "mana"
+        (infoBit) => infoBit.infoType === "mana"
       )!;
-      prevCharacterList[index] = { info_type: "mana", input: mana };
+      prevCharacterList[index] = { infoType: "mana", input: mana };
       return prevCharacterList.slice();
     });
   }

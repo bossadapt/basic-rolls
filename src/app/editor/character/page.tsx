@@ -1,5 +1,5 @@
 "use client";
-import { SyntheticEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ToastContainer, toast } from "react-toastify";
@@ -7,35 +7,40 @@ import { checkRoll } from "@/app/helperFunctions";
 import { CharacterInfo } from "@/app/globalInterfaces";
 import "react-toastify/dist/ReactToastify.css";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
-interface CharacterInfoProps {
-  characterInfoList: CharacterInfo[];
-}
-export const CharacterEditor: React.FC<CharacterInfoProps> = ({
-  characterInfoList,
-}) => {
+import "./character.css";
+export const CharacterEditor: React.FC = () => {
   const router = useRouter();
-  const [currentCharacterInfoList, setCurrentCharacterInfoList] = useState<
-    CharacterInfo[]
-  >([
-    { info_type: "name", input: "" },
-    { info_type: "hp", input: "" },
-    { info_type: "ac", input: "" },
-    { info_type: "mana", input: "" },
-  ]);
+  let defaultCharacterInfo: CharacterInfo[] = [
+    { infoType: "name", input: "" },
+    { infoType: "hp", input: "" },
+    { infoType: "ac", input: "" },
+    { infoType: "mana", input: "" },
+  ];
+  const [currentCharacterInfoList, setCurrentCharacterInfoList] =
+    useState<CharacterInfo[]>(defaultCharacterInfo);
   let nameInfo = currentCharacterInfoList[0]!;
   let hpInfo = currentCharacterInfoList[1]!;
   let acInfo = currentCharacterInfoList[2]!;
   let manaInfo = currentCharacterInfoList[3]!;
+  useEffect(() => {
+    invoke<CharacterInfo[]>("grab_character_info", {})
+      .then((result) => {
+        if (result.length > 0) {
+          setCurrentCharacterInfoList(result);
+        }
+      })
+      .catch(console.error);
+  }, []);
   function sendErrorMessage(message: string) {
     toast.warning(message, {
       position: "bottom-center",
     });
   }
-  function updateCurrentCharacterInfo(info_type: string, input: string) {
+  function updateCurrentCharacterInfo(infoType: string, input: string) {
     setCurrentCharacterInfoList((prev) => {
       prev = prev.map((info) => {
-        if (info.info_type === info_type) {
-          return { info_type: info_type, input: input };
+        if (info.infoType === infoType) {
+          return { infoType: infoType, input: input };
         }
         return info;
       });
@@ -43,21 +48,21 @@ export const CharacterEditor: React.FC<CharacterInfoProps> = ({
     });
   }
   function finish() {
-    characterInfoList = currentCharacterInfoList.map((currentInfo) => {
-      return { info_type: currentInfo.info_type, input: currentInfo.input };
+    let characterInfoList = currentCharacterInfoList.map((currentInfo) => {
+      return { infoType: currentInfo.infoType, input: currentInfo.input };
     });
     //checks
     for (let i = 0; i < characterInfoList.length; i++) {
       if (characterInfoList[i].input === "") {
-        sendErrorMessage("Field left empty: " + characterInfoList[i].info_type);
+        sendErrorMessage("Field left empty: " + characterInfoList[i].infoType);
         return;
       }
-      if (characterInfoList[i].info_type !== "name") {
+      if (characterInfoList[i].infoType !== "name") {
         let characterInfoCheck = checkRoll(characterInfoList[i].input, []);
         if (!characterInfoCheck.result) {
           sendErrorMessage(
             'Error found in "' +
-              characterInfoList[i].info_type +
+              characterInfoList[i].infoType +
               '" is: ' +
               characterInfoCheck.desc
           );
@@ -76,16 +81,7 @@ export const CharacterEditor: React.FC<CharacterInfoProps> = ({
       .catch(console.error);
   }
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        maxHeight: "100vh",
-        width: "100vw",
-        maxWidth: "100vw",
-      }}
-    >
+    <div className="characterContents">
       <EditorTitleAndFinish
         title="Character Info Editor"
         handleFinishButton={finish}
@@ -94,28 +90,28 @@ export const CharacterEditor: React.FC<CharacterInfoProps> = ({
       <input
         value={nameInfo.input}
         onChange={(eve) =>
-          updateCurrentCharacterInfo(nameInfo.info_type, eve.target.value)
+          updateCurrentCharacterInfo(nameInfo.infoType, eve.target.value)
         }
       ></input>
       <h3>Health Points</h3>
       <input
         value={hpInfo.input}
         onChange={(eve) =>
-          updateCurrentCharacterInfo(hpInfo.info_type, eve.target.value)
+          updateCurrentCharacterInfo(hpInfo.infoType, eve.target.value)
         }
       ></input>
       <h3>Armor Class</h3>
       <input
         value={acInfo.input}
         onChange={(eve) =>
-          updateCurrentCharacterInfo(acInfo.info_type, eve.target.value)
+          updateCurrentCharacterInfo(acInfo.infoType, eve.target.value)
         }
       ></input>
       <h3>Max Mana</h3>
       <input
         value={manaInfo.input}
         onChange={(eve) =>
-          updateCurrentCharacterInfo(manaInfo.info_type, eve.target.value)
+          updateCurrentCharacterInfo(manaInfo.infoType, eve.target.value)
         }
       ></input>
       <ToastContainer />

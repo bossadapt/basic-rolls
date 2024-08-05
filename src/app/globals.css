@@ -26,6 +26,5 @@ button {
 html,
 body {
   background-color: var(--main-background-color);
-  min-height: 100vh;
   margin: 0;
 }

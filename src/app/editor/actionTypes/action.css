@@ -3,6 +3,9 @@
   justify-content: center;
   flex-direction: row;
 }
+.actionEditor {
+  height: 50vh;
+}
 .editorTable {
   width: 60%;
   margin-left: auto;
@@ -11,7 +14,6 @@
 .addButton {
   width: 60%;
   margin-left: 20%;
-  line-height: 50px;
   font-size: 20px;
 }
 .editorTable > thead > tr > th {
@@ -22,6 +24,10 @@
   text-align: left;
   color: white;
 }
+.displayDiv {
+  height: 30vh;
+  overflow-y: scroll;
+}
 .displayTable {
   margin-left: auto;
   margin-right: auto;
@@ -31,6 +37,9 @@
 .displayTable > thead > tr > th {
   text-align: center;
   color: darkgrey;
+  position: sticky;
+  top: 0;
+  background-color: var(--main-background-color);
 }
 .displayTable > tbody > tr > th {
   text-align: center;
@@ -60,7 +69,7 @@
 th {
   text-wrap: wrap;
 }
-.column {
+.actionColumn {
   display: flex;
   justify-content: center;
   flex-direction: column;

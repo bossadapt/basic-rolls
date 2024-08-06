@@ -21,7 +21,9 @@ export const ActionTypeEditor: React.FC = () => {
   let defaultActionType: ActionType = {
     id: "",
     name: "",
-    limits: initialLimit,
+    limits: initialLimit.map((limit) => {
+      return { ...limit };
+    }),
   };
   const [toolTipColor, setToolTipColor] = useState("grey");
   const [actionTypeNameSearch, setActionTypeNameSearch] = useState("");
@@ -87,7 +89,7 @@ export const ActionTypeEditor: React.FC = () => {
     console.log(actionTypes);
     setToolTipColor("green");
     setToolTip('Added "' + currentActionType.name + '"');
-    setFocusedActionType(defaultActionType);
+    setFocusedActionType({ ...defaultActionType });
   }
   function useCountChangeHandler(
     timeFocused: ActionTypeLimit,
@@ -124,12 +126,16 @@ export const ActionTypeEditor: React.FC = () => {
     }
   }
   function finishButtonHandler() {
-    console.log(actionTypes);
-    invoke("overwrite_action_types", { newActionTypes: actionTypes })
-      .then((result) => {
-        router.push("/editor");
-      })
-      .catch(console.error);
+    if (actionTypes.length < 1) {
+      setToolTip("Cannot finish without a single actiontype");
+      setToolTipColor("red");
+    } else {
+      invoke("overwrite_action_types", { newActionTypes: actionTypes })
+        .then((result) => {
+          router.push("/editor");
+        })
+        .catch(console.error);
+    }
   }
   function handleDeleteButton(targetActionType: ActionType) {
     setActionTypes((oldActions) => {
@@ -197,141 +203,152 @@ export const ActionTypeEditor: React.FC = () => {
           handleFinishButton={finishButtonHandler}
         ></EditorTitleAndFinish>
       </div>
-      <div className="column">
-        <p style={{ color: toolTipColor, textAlign: "center" }}>{toolTip}</p>
-        <div className="actionRow">
-          <input
-            placeholder="Name Of Action Type"
-            style={{ marginLeft: "auto", marginRight: "auto" }}
-            value={focusedActionType.name}
-            onChange={(eve) => nameChangeHandler(eve.target.value)}
-          ></input>
-        </div>
-        <table className="editorTable">
-          <thead>
-            <tr>
-              <th style={{ textAlign: "center" }}>
-                Enabled<br></br> Limit
-              </th>
-              <th className="editorTh">
-                Use<br></br>Count
-              </th>
-              <th className="editorTh"> </th>
-              <th className="editorTh">
-                Time<br></br>Count
-              </th>
-              <th className="editorTh">
-                Time<br></br>Type
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {focusedActionType.limits.map((en) => {
-              return (
-                <tr key={en.time}>
-                  <td
-                    className="editorTd"
-                    style={{ textAlign: "center", margin: "0" }}
-                  >
-                    <input
-                      style={{ width: "100%" }}
-                      type="checkbox"
-                      checked={en.active}
-                      onChange={(eve) =>
-                        checkBoxClickHandler(en.time, eve.target.checked)
-                      }
-                    ></input>
-                  </td>
-                  <td className="editorTd">
-                    <input
-                      disabled={!en.active}
-                      type="number"
-                      className="listInput"
-                      value={en.useCount}
-                      onChange={(eve) =>
-                        useCountChangeHandler(en.time, Number(eve.target.value))
-                      }
-                    ></input>
-                  </td>
-                  <td className="editorTd"> for every</td>
-                  <td className="editorTd">
-                    <input
-                      disabled={!en.active}
-                      type="number"
-                      className="listInput"
-                      value={en.timeCount}
-                      onChange={(eve) =>
-                        timeCountChangeHandler(
-                          en.time,
-                          Number(eve.target.value)
-                        )
-                      }
-                    ></input>
-                  </td>
-                  <td className="editorTd">{ActionTypeLimitString[en.time]}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <button
-          onClick={() => actionTypeAddHandler({ ...focusedActionType })}
-          className="addButton"
-        >
-          {finalizeCurrentButtonTitle} Action Type
-        </button>
-        <table className="displayTable">
-          <thead>
-            <tr>
-              <th>
-                <input
-                  value={actionTypeNameSearch}
-                  onChange={(eve) => setActionTypeNameSearch(eve.target.value)}
-                  placeholder="Action Type Name"
-                ></input>
-              </th>
-              <th>Turn</th>
-              <th>Combat</th>
-              <th>Short Rest</th>
-              <th>Long Rest</th>
-              <th>X</th>
-            </tr>
-          </thead>
-          <tbody>
-            {actionTypes
-              .filter((actionType) => {
-                return actionType.name
-                  .toLocaleLowerCase()
-                  .includes(actionTypeNameSearch.toLocaleLowerCase());
-              })
-              .map((actionType) => {
+      <div className="actionColumn">
+        <div className="actionEditor">
+          <p style={{ color: toolTipColor, textAlign: "center" }}>{toolTip}</p>
+          <div className="actionRow">
+            <input
+              placeholder="Name Of Action Type"
+              style={{ marginLeft: "auto", marginRight: "auto" }}
+              value={focusedActionType.name}
+              onChange={(eve) => nameChangeHandler(eve.target.value)}
+            ></input>
+          </div>
+          <table className="editorTable">
+            <thead>
+              <tr>
+                <th style={{ textAlign: "center" }}>
+                  Enabled<br></br> Limit
+                </th>
+                <th className="editorTh">
+                  Use<br></br>Count
+                </th>
+                <th className="editorTh"> </th>
+                <th className="editorTh">
+                  Time<br></br>Count
+                </th>
+                <th className="editorTh">
+                  Time<br></br>Type
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {focusedActionType.limits.map((en) => {
                 return (
-                  <tr key={actionType.id}>
-                    <th onClick={() => handleEditButton(actionType)}>
-                      {actionType.name}
-                    </th>
-                    <td onClick={() => handleEditButton(actionType)}>
-                      {timeRatioBuilder(actionType.limits[0])}
+                  <tr key={en.time}>
+                    <td
+                      className="editorTd"
+                      style={{ textAlign: "center", margin: "0" }}
+                    >
+                      <input
+                        style={{ width: "100%" }}
+                        type="checkbox"
+                        checked={en.active}
+                        onChange={(eve) =>
+                          checkBoxClickHandler(en.time, eve.target.checked)
+                        }
+                      ></input>
                     </td>
-                    <td onClick={() => handleEditButton(actionType)}>
-                      {timeRatioBuilder(actionType.limits[1])}
+                    <td className="editorTd">
+                      <input
+                        disabled={!en.active}
+                        type="number"
+                        className="listInput"
+                        value={en.useCount}
+                        onChange={(eve) =>
+                          useCountChangeHandler(
+                            en.time,
+                            Number(eve.target.value)
+                          )
+                        }
+                      ></input>
                     </td>
-                    <td onClick={() => handleEditButton(actionType)}>
-                      {timeRatioBuilder(actionType.limits[2])}
+                    <td className="editorTd"> for every</td>
+                    <td className="editorTd">
+                      <input
+                        disabled={!en.active}
+                        type="number"
+                        className="listInput"
+                        value={en.timeCount}
+                        onChange={(eve) =>
+                          timeCountChangeHandler(
+                            en.time,
+                            Number(eve.target.value)
+                          )
+                        }
+                      ></input>
                     </td>
-                    <td onClick={() => handleEditButton(actionType)}>
-                      {timeRatioBuilder(actionType.limits[3])}
-                    </td>
-                    <td>
-                      <button onClick={() => handleDeleteButton(actionType)}>
-                        X
-                      </button>
+                    <td className="editorTd">
+                      {ActionTypeLimitString[en.time]}
                     </td>
                   </tr>
                 );
               })}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+          <button
+            onClick={() => actionTypeAddHandler({ ...focusedActionType })}
+            className="addButton"
+          >
+            {finalizeCurrentButtonTitle} Action Type
+          </button>
+        </div>
+        <div className="displayDiv">
+          <table className="displayTable">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    value={actionTypeNameSearch}
+                    onChange={(eve) =>
+                      setActionTypeNameSearch(eve.target.value)
+                    }
+                    placeholder="Action Type Name"
+                  ></input>
+                </th>
+                <th>Turn</th>
+                <th>Combat</th>
+                <th>Short Rest</th>
+                <th>Long Rest</th>
+                <th>X</th>
+              </tr>
+            </thead>
+            <tbody>
+              {actionTypes
+                .filter((actionType) => {
+                  return actionType.name
+                    .toLocaleLowerCase()
+                    .includes(actionTypeNameSearch.toLocaleLowerCase());
+                })
+                .map((actionType) => {
+                  return (
+                    <tr key={actionType.id}>
+                      <th onClick={() => handleEditButton(actionType)}>
+                        {actionType.name}
+                      </th>
+                      <td onClick={() => handleEditButton(actionType)}>
+                        {timeRatioBuilder(actionType.limits[0])}
+                      </td>
+                      <td onClick={() => handleEditButton(actionType)}>
+                        {timeRatioBuilder(actionType.limits[1])}
+                      </td>
+                      <td onClick={() => handleEditButton(actionType)}>
+                        {timeRatioBuilder(actionType.limits[2])}
+                      </td>
+                      <td onClick={() => handleEditButton(actionType)}>
+                        {timeRatioBuilder(actionType.limits[3])}
+                      </td>
+                      <td>
+                        <button onClick={() => handleDeleteButton(actionType)}>
+                          X
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

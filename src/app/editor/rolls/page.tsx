@@ -76,15 +76,19 @@ export const EditRolls: React.FC = () => {
       }
     }
     //update datasets
-    invoke<boolean>("overwrite_rolls", {
-      newRolls: rolls,
-    })
-      .then((result) => {
-        //move back to the basic menu to see if they are ready
-        console.log("finished adding to sql");
-        router.push("../../home");
+    if (rolls.length > 0) {
+      invoke<boolean>("overwrite_rolls", {
+        newRolls: rolls,
       })
-      .catch(console.error);
+        .then((result) => {
+          //move back to the basic menu to see if they are ready
+          console.log("finished adding to sql");
+          router.push("../../home");
+        })
+        .catch(console.error);
+    } else {
+      setTooltip("Must have at least one roll to leave this page");
+    }
   }
   //setters for editorRoll
   function setEditorName(newName: string) {

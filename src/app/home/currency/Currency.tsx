@@ -2,24 +2,44 @@ import { useState } from "react";
 import "../home.css";
 import "./currency.css";
 interface CurrencyProps {}
-
+interface CurrencyStruct{
+  title: string;
+  value: number;
+}
+//TODO: make it more basic so that we can just use the coins and add a minus and add feature that converts to the lowest forms/ or just move it into inventory
 export const Currency: React.FC<CurrencyProps> = () => {
   const [currencyTable, setCurrencyTable] = useState<
-    {
-      title: string;
-      value: number;
-    }[]
-  >([]);
+    CurrencyStruct[]
+  >([{
+    title: "PP",
+    value: 0
+  },{
+    title: "GP",
+    value: 0
+  },{
+    title: "EP",
+    value: 0
+  },{
+    title: "SP",
+    value: 0
+  },{
+    title: "CP",
+    value: 0
+  }]);
+  function addCurrencyType(){
+    setCurrencyTable((prev)=>{
+      prev.push({
+        title: "",
+        value: 0
+      })
+      return prev.slice();
+    })
+  }
   return (
-    <div style={{ display: "flex", flex: "1", flexDirection: "column" }}>
+    <div style={{ display: "flex", flex: "1", flexDirection: "column",height:"100%" }}>
       <h2 className="categoryTitle">Currency</h2>
       <div
-        style={{
-          display: "flex",
-          width: "100%",
-          minWidth: "100%",
-          justifyContent: "center",
-        }}
+        className="currencyTableAndButton"
       >
         <table className="currencyTable">
           <thead className="tableHead">
@@ -29,20 +49,28 @@ export const Currency: React.FC<CurrencyProps> = () => {
             </tr>
           </thead>
           <tbody>
-            {currencyTable.map((currency) => {
+            {currencyTable.map((currency, index) => {
               return (
-                <tr key={currency.title} className="row">
-                  <td>{currency.title}</td>
+                <tr key={index} className="row">
+                  <td><input
+                      type="Text"
+                      value={currency.title}
+                      onChange={(eve) => {
+                        setCurrencyTable((previousTable) => {
+                          previousTable[index].title = 
+                            eve.target.value
+                          ;
+                          return previousTable.slice();
+                        });
+                      }}
+                    ></input></td>
                   <td>
                     <input
                       type="number"
                       value={currency.value}
                       onChange={(eve) => {
                         setCurrencyTable((previousTable) => {
-                          let curIndex = previousTable.findIndex(
-                            (currency) => currency.title === currency.title
-                          )!;
-                          previousTable[curIndex].value = Number(
+                          previousTable[index].value = Number(
                             eve.target.value
                           );
                           return previousTable.slice();
@@ -55,6 +83,7 @@ export const Currency: React.FC<CurrencyProps> = () => {
             })}
           </tbody>
         </table>
+      <button onClick={(ev)=>{addCurrencyType()}}>Add Currency Type</button>
       </div>
     </div>
   );

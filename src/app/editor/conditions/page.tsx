@@ -11,7 +11,7 @@ import {
   Condition,
   ListsResult,
 } from "@/app/globalInterfaces";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from '@tauri-apps/api/core';
 import RollsEffectsTable from "./RollsEffectTable";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
 import { checkRoll, generateID, nameValidation } from "@/app/helperFunctions";
@@ -159,10 +159,10 @@ export const Conditions: React.FC = () => {
       } else {
         //update existing
         oldConditions[
-          oldConditions.findIndex((item) => {
-            item.id === currentFocusedCondition.id;
-          })
-        ] = currentFocusedCondition;
+          oldConditions.findIndex(
+            (item) => item.id === currentFocusedCondition.id
+          )
+        ] = { ...currentFocusedCondition };
         setFinishedConditionButtonInfo("Condition Updated");
       }
       setFocusedCondition({ ...defaultCondition });

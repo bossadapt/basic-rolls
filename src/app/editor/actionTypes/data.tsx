@@ -5,25 +5,25 @@ import {
 } from "@/app/globalInterfaces";
 export let initialLimit: ActionLimit[] = [
   {
-    time: ActionTypeLimit.Turn,
+    timeID: ActionTypeLimit.Turn,
     active: false,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.Combat,
+    timeID: ActionTypeLimit.Combat,
     active: false,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.ShortRest,
+    timeID: ActionTypeLimit.ShortRest,
     active: false,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.LongRest,
+    timeID: ActionTypeLimit.LongRest,
     active: false,
     useCount: 1,
     timeCount: 1,
@@ -31,25 +31,25 @@ export let initialLimit: ActionLimit[] = [
 ];
 export let oneTurnLimit: ActionLimit[] = [
   {
-    time: ActionTypeLimit.Turn,
+    timeID: ActionTypeLimit.Turn,
     active: true,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.Combat,
+    timeID: ActionTypeLimit.Combat,
     active: false,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.ShortRest,
+    timeID: ActionTypeLimit.ShortRest,
     active: false,
     useCount: 1,
     timeCount: 1,
   },
   {
-    time: ActionTypeLimit.LongRest,
+    timeID: ActionTypeLimit.LongRest,
     active: false,
     useCount: 1,
     timeCount: 1,
@@ -60,20 +60,24 @@ export let defaultActionTypes: ActionType[] = [
     id: "0",
     name: "Action",
     limits: oneTurnLimit,
+    parents: []
   },
   {
     id: "1",
     name: "BonusAction",
     limits: oneTurnLimit,
+    parents: []
   },
   {
     id: "2",
     name: "Attack",
     limits: oneTurnLimit,
+    parents: []
   },
   {
     id: "3",
     name: "Reaction",
     limits: oneTurnLimit,
+    parents: []
   },
 ];

@@ -6,19 +6,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tauri": "tauri"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.0.1",
     "multiselect-react-dropdown": "^2.0.25",
-    "next": "14.1.0",
+    "next": "^14.2.14",
     "react": "^18",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18",
     "react-select": "^5.8.0",
     "react-toastify": "^10.0.5",
+    "tauri": "^0.15.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0-rc.18",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-copy-to-clipboard": "^5.0.7",

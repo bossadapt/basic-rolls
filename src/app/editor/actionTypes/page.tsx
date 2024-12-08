@@ -9,9 +9,10 @@ import {
   ActionTypeLimit,
   ActionTypeLimitString,
 } from "@/app/globalInterfaces";
+import Select, { ActionMeta, MultiValue } from "react-select";
 import { generateID, nameValidation } from "@/app/helperFunctions";
 import EditorTitleAndFinish from "../editorTitleAndFinish";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from '@tauri-apps/api/core';
 import { useRouter } from "next/navigation";
 export const ActionTypeEditor: React.FC = () => {
   const router = useRouter();
@@ -24,6 +25,7 @@ export const ActionTypeEditor: React.FC = () => {
     limits: initialLimit.map((limit) => {
       return { ...limit };
     }),
+    parents:[]
   };
   const [toolTipColor, setToolTipColor] = useState("grey");
   const [actionTypeNameSearch, setActionTypeNameSearch] = useState("");
@@ -98,7 +100,7 @@ export const ActionTypeEditor: React.FC = () => {
     if (newNumber > 0) {
       setFocusedActionType((prev) => {
         let newLimitList = prev.limits.map((limit) => {
-          if (limit.time == timeFocused) {
+          if (limit.timeID == timeFocused) {
             limit.useCount = newNumber;
           }
           return limit;
@@ -115,7 +117,7 @@ export const ActionTypeEditor: React.FC = () => {
     if (newNumber > 0) {
       setFocusedActionType((prev) => {
         let newLimitList = prev.limits.map((limit) => {
-          if (limit.time == timeFocused) {
+          if (limit.timeID == timeFocused) {
             limit.timeCount = newNumber;
           }
           return limit;
@@ -151,6 +153,7 @@ export const ActionTypeEditor: React.FC = () => {
     setFocusedActionType({
       id: targetActionType.id,
       name: targetActionType.name,
+      parents: targetActionType.parents,
       limits: targetActionType.limits.map((lim) => {
         return { ...lim };
       }),
@@ -171,7 +174,7 @@ export const ActionTypeEditor: React.FC = () => {
   ) {
     setFocusedActionType((prev) => {
       let newLimitList = prev.limits.map((limit) => {
-        if (limit.time == timeEnabled) {
+        if (limit.timeID == timeEnabled) {
           limit.active = checked;
         }
         return limit;
@@ -180,6 +183,7 @@ export const ActionTypeEditor: React.FC = () => {
       return { ...prev };
     });
   }
+
   function timeRatioBuilder(limit: ActionLimit): string {
     if (!limit.active) {
       return "N/A";
@@ -189,20 +193,10 @@ export const ActionTypeEditor: React.FC = () => {
   }
   return (
     <div>
-      <div
-        style={{
-          width: "90%",
-          marginLeft: "auto",
-          marginRight: "auto",
-          display: "flex",
-          flexDirection: "row",
-        }}
-      >
         <EditorTitleAndFinish
           title="Action Type Editor"
           handleFinishButton={finishButtonHandler}
         ></EditorTitleAndFinish>
-      </div>
       <div className="actionColumn">
         <div className="actionEditor">
           <p style={{ color: toolTipColor, textAlign: "center" }}>{toolTip}</p>
@@ -235,7 +229,7 @@ export const ActionTypeEditor: React.FC = () => {
             <tbody>
               {focusedActionType.limits.map((en) => {
                 return (
-                  <tr key={en.time}>
+                  <tr key={en.timeID}>
                     <td
                       className="editorTd"
                       style={{ textAlign: "center", margin: "0" }}
@@ -245,7 +239,7 @@ export const ActionTypeEditor: React.FC = () => {
                         type="checkbox"
                         checked={en.active}
                         onChange={(eve) =>
-                          checkBoxClickHandler(en.time, eve.target.checked)
+                          checkBoxClickHandler(en.timeID, eve.target.checked)
                         }
                       ></input>
                     </td>
@@ -257,7 +251,7 @@ export const ActionTypeEditor: React.FC = () => {
                         value={en.useCount}
                         onChange={(eve) =>
                           useCountChangeHandler(
-                            en.time,
+                            en.timeID,
                             Number(eve.target.value)
                           )
                         }
@@ -272,20 +266,22 @@ export const ActionTypeEditor: React.FC = () => {
                         value={en.timeCount}
                         onChange={(eve) =>
                           timeCountChangeHandler(
-                            en.time,
+                            en.timeID,
                             Number(eve.target.value)
                           )
                         }
                       ></input>
                     </td>
                     <td className="editorTd">
-                      {ActionTypeLimitString[en.time]}
+                      {ActionTypeLimitString[en.timeID]}
                     </td>
                   </tr>
                 );
               })}
+
             </tbody>
           </table>
+          
           <button
             onClick={() => actionTypeAddHandler({ ...focusedActionType })}
             className="addButton"

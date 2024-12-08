@@ -32,14 +32,19 @@ export interface ActionType {
   id: string;
   name: string;
   limits: ActionLimit[];
+  parents: ActionTypeParent[];
+}
+export interface ActionTypeParent{
+  id:string,
+  parent:string,
+  required:boolean
 }
 export interface ActionLimit {
-  time: ActionTypeLimit;
-  active: boolean;
+  timeID: ActionTypeLimit;
+  active:boolean;
   useCount: number;
   timeCount: number;
 }
-
 export interface AbilityScore {
   ability: string;
   score: number;

@@ -9,7 +9,7 @@ import {
   generateID,
 } from "../../helperFunctions";
 import { RollEditCard } from "./RollEditCard";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from '@tauri-apps/api/core';
 import { useRouter } from "next/navigation";
 import {
   AbilityScore,

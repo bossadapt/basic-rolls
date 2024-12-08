@@ -5,7 +5,7 @@ import { Conditions } from "./conditions/Conditions";
 import { Currency } from "./currency/Currency";
 import { DiceBuilder } from "./diceBuilder/DiceBuilder";
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from '@tauri-apps/api/core';
 import {
   AbilityScore,
   Roll,
@@ -106,11 +106,13 @@ export const Home: React.FC = () => {
         <div>
           <Conditions conditions={conditions} />
         </div>
-        <div>
+        <div >
           <Currency />
         </div>
       </div>
-      <DiceBuilder rolls={rolls} abilityScores={abilityScores} />
+      <div className="bottomHoriz">
+        <DiceBuilder rolls={rolls} abilityScores={abilityScores} />
+      </div>
     </div>
   );
 };

@@ -246,11 +246,7 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
       ></input>
 
       <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          width: "100vw",
-        }}
+        className="tablesDiv"
       >
         <div className="rollTables">
           <table style={{ width: "100%" }}>
@@ -386,51 +382,52 @@ export const DiceBuilder: React.FC<DiceBuilderProps> = ({
           </table>
         </div>
       </div>
-
-      <div className="horiz" style={{ width: "75%" }}>
-        {assistDiceOptions.map((option) => {
-          return (
-            <button
-              key={option}
-              className="speedButton"
-              onClick={() =>
-                setCurrentRoll((cur) => {
-                  return cur + option;
-                })
-              }
-            >
-              {option}
-            </button>
-          );
-        })}
-        {assistSymbolOptions.map((symbol) => {
-          return (
-            <button
-              key={symbol}
-              className="speedButton"
-              onClick={() =>
-                setCurrentRoll((cur) => {
-                  return cur + symbol;
-                })
-              }
-            >
-              {symbol}
-            </button>
-          );
-        })}
-      </div>
-      <div className="horiz">
-        <button onClick={() => setCurrentRoll("")}>X</button>
-        <input
-          placeholder="type to edit roll or press"
-          style={{ width: "75%", fontSize: "18px" }}
-          value={currentRoll}
-          onChange={(evt) => setCurrentRoll(evt.target.value)}
-        ></input>
-        <button onClick={() => finishRoll("disadvantage")}>Disadvantage</button>
-        <button onClick={() => finishRoll("normal")}>Normal</button>
-        <button onClick={() => finishRoll("advantage")}>Advantage</button>
-        <button onClick={() => finishRoll("crit")}>CRIT</button>
+      <div className="outputDiv">
+        <div>
+          {assistDiceOptions.map((option) => {
+            return (
+              <button
+                key={option}
+                className="speedButton"
+                onClick={() =>
+                  setCurrentRoll((cur) => {
+                    return cur + option;
+                  })
+                }
+              >
+                {option}
+              </button>
+            );
+          })}
+          {assistSymbolOptions.map((symbol) => {
+            return (
+              <button
+                key={symbol}
+                className="speedButton"
+                onClick={() =>
+                  setCurrentRoll((cur) => {
+                    return cur + symbol;
+                  })
+                }
+              >
+                {symbol}
+              </button>
+            );
+          })}
+        </div>
+        <div>
+          <button onClick={() => setCurrentRoll("")}>X</button>
+          <input
+            placeholder="type to edit roll or press"
+            style={{ width: "75%", fontSize: "18px" }}
+            value={currentRoll}
+            onChange={(evt) => setCurrentRoll(evt.target.value)}
+          ></input>
+          <button onClick={() => finishRoll("disadvantage")}>Disadvantage</button>
+          <button onClick={() => finishRoll("normal")}>Normal</button>
+          <button onClick={() => finishRoll("advantage")}>Advantage</button>
+          <button onClick={() => finishRoll("crit")}>CRIT</button>
+        </div>
       </div>
       <ToastContainer />
     </div>

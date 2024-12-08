@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from '@tauri-apps/api/core';
 import { useRouter } from "next/navigation";
 import { ListsResult } from "../globalInterfaces";
 export const Editor: React.FC = () => {

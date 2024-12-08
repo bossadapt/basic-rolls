@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { useRouter } from "next/navigation";
 import { AbilityScore } from "@/app/globalInterfaces";
 import "./abilityScore.css";

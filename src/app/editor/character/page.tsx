@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { ToastContainer, toast } from "react-toastify";
 import { checkRoll } from "@/app/helperFunctions";
 import { CharacterInfo } from "@/app/globalInterfaces";

@@ -1,8 +1,19 @@
+.currencyTableAndButton{
+  display: flex;
+  flex-direction:column;
+  width:80%;
+  max-height: 100%;
+  margin-left:auto;
+  margin-right:auto;
+  overflow-y: scroll;
+}
 .currencyTable {
-  table-layout: fixed;
-  width: 80%;
+  table-layout: fixed; 
+  width: 100%;
   margin-top: 4px;
-  min-width: 80%;
-  overflow-y: auto;
-  max-height: 150px;
+}
+.currencyTable tr> td > input {
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
 }

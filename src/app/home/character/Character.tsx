@@ -3,6 +3,7 @@ import "./character.css";
 import "../home.css";
 import { ToastContainer, toast } from "react-toastify";
 import { CharacterInfo } from "../../globalInterfaces";
+import "react-toastify/dist/ReactToastify.css";
 interface CharacterProps {
   characterInfo: CharacterInfo[];
   setCharacterInfo: Dispatch<SetStateAction<CharacterInfo[]>>;

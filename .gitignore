@@ -6,7 +6,7 @@
 /src-tauri/build.rs
 /src-tauri/.gitignore
 /src-tauri/icons/
-
+package-lock.json
 # dependencies
 /node_modules
 /.pnp
